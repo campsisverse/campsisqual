@@ -54,7 +54,6 @@ Collate:
     'special_operators.R'
     'utils.R'
     'tinytex.R'
-    'dataset.R'
     'installation_qualification.R'
     'nonmem_results_parser.R'
     'qualification_summary.R'
