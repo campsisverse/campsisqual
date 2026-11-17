@@ -121,6 +121,7 @@ qualify <- function(
 #' @param dest destination engine
 #' @return the corrected output if the bug was not present if RxODE
 #' @importFrom dplyr filter
+#' @importFrom campsismod find LagTime
 #' @importFrom campsis get_times
 fix_rxode_bug <- function(campsis, model, dataset, dest) {
   if (dest %in% c("RxODE", "rxode2")) {
@@ -130,7 +131,7 @@ fix_rxode_bug <- function(campsis, model, dataset, dest) {
       # If LAG is found in model & time 0 does not exists in observations
       # We remove time 0 from the output
       properties <- model@compartments@properties
-      if (!is.null(properties %>% find(LagTime(1))) && !(0 %in% times)) {
+      if (!is.null(properties %>% campsismod::find(campsismod::LagTime(1))) && !(0 %in% times)) {
         campsis <- campsis %>% dplyr::filter(TIME != 0)
       }
     }

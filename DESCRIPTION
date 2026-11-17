@@ -11,10 +11,10 @@ License: GPL (>= 3)
 URL: https://github.com/campsisverse/campsisqual
 BugReports: https://github.com/campsisverse/campsisqual/issues
 Depends:
-    campsismod,
     R (>= 4.1.0)
 Imports: 
     assertthat,
+    campsismod,
     campsis,
     doSNOW,
     dplyr,

@@ -31,13 +31,18 @@ export(runQualification)
 export(run_qualification)
 export(run_qualification_core)
 export(with_dir)
+export(write)
 exportClasses(qualification_summary)
 importFrom(assertthat,assert_that)
 importFrom(campsis,
   get_times,
   obs_only
 )
-importFrom(campsismod,export)
+importFrom(campsismod,
+  LagTime,
+  export,
+  find
+)
 importFrom(doSNOW,registerDoSNOW)
 importFrom(dplyr,
   across,

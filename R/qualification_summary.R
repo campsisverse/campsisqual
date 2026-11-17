@@ -123,6 +123,22 @@ setMethod("passed", signature = c("qualification_summary"), definition = functio
 #----                                 write                                 ----
 #_______________________________________________________________________________
 
+#' Write generic object to files.
+#'
+#' @param object generic object
+#' @param file path of the output file or directory
+#' @param ... extra arguments
+#' @return logical value, TRUE for success, FALSE for failure
+#' @export
+#' @rdname write
+write <- function(object, file, ...) {
+  stop("No default function is provided")
+}
+
+setGeneric("write", function(object, file, ...) {
+  standardGeneric("write")
+})
+
 #' Export qualification summary to PDF file.
 #'
 #' @param object qualification summary object

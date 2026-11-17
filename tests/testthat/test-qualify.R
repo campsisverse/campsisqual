@@ -1,7 +1,7 @@
 model <- campsismod::model_suite$pk$`1cpt_fo`
 dataset <- campsis::Dataset(3) %>%
-  add(campsis::Bolus(time = 0, amount = 1000)) %>%
-  add(campsis::Observations(times = seq(0, 24, by = 4)))
+  campsismod::add(campsis::Bolus(time = 0, amount = 1000)) %>%
+  campsismod::add(campsis::Observations(times = seq(0, 24, by = 4)))
 
 # Reference predictions are simulated with rxode2 (they play the role of NONMEM predictions)
 simulate_reference <- function() {
@@ -52,17 +52,17 @@ test_that("append_original_id appends ORIGINAL_ID when available in dataset", {
 })
 
 test_that("fix_rxode_bug removes time 0 with rxode2 when model has a lag time and no observation at 0", {
-  lagModel <- model %>% add(campsismod::LagTime(compartment = 1, rhs = "1"))
-  datasetNo0 <- campsis::Dataset(1) %>%
-    add(campsis::Bolus(time = 0, amount = 1000)) %>%
-    add(campsis::Observations(times = c(1, 2)))
+  lag_model <- model %>% campsismod::add(campsismod::LagTime(compartment = 1, rhs = "1"))
+  dataset_no_zero <- campsis::Dataset(1) %>%
+    campsismod::add(campsis::Bolus(time = 0, amount = 1000)) %>%
+    campsismod::add(campsis::Observations(times = c(1, 2)))
   output <- tibble::tibble(ID = 1, TIME = c(0, 1, 2))
 
-  expect_equal(fix_rxode_bug(output, lagModel, datasetNo0, dest = "rxode2")$TIME, c(1, 2))
-  expect_equal(fix_rxode_bug(output, lagModel, datasetNo0, dest = "mrgsolve"), output)
-  expect_equal(fix_rxode_bug(output, model, datasetNo0, dest = "rxode2"), output)
-  expect_equal(fix_rxode_bug(output, lagModel, dataset, dest = "rxode2"), output)
-  expect_equal(fix_rxode_bug(output, lagModel, as.data.frame(output), dest = "rxode2"), output)
+  expect_equal(fix_rxode_bug(output, lag_model, dataset_no_zero, dest = "rxode2")$TIME, c(1, 2))
+  expect_equal(fix_rxode_bug(output, lag_model, dataset_no_zero, dest = "mrgsolve"), output)
+  expect_equal(fix_rxode_bug(output, model, dataset_no_zero, dest = "rxode2"), output)
+  expect_equal(fix_rxode_bug(output, lag_model, dataset, dest = "rxode2"), output)
+  expect_equal(fix_rxode_bug(output, lag_model, as.data.frame(output), dest = "rxode2"), output)
 })
 
 test_that("qualify passes when Campsis reproduces the reference predictions", {
@@ -168,7 +168,7 @@ test_that("qualification summary can be exported to PDF", {
 
   file <- withr::local_tempfile(fileext = ".pdf")
   suppressMessages(capture.output(
-    campsismod::write(summary, file = file, original_model = "RUN001.ctl", notes = "Some notes")
+    write(summary, file = file, original_model = "RUN001.ctl", notes = "Some notes")
   ))
   expect_true(file.exists(file))
   expect_gt(file.size(file), 0)
