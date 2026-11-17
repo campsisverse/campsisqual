@@ -41,7 +41,7 @@ notes <- params$notes
 # Computer information
 
 ```{r}
-computerInfo <-
+computer_info <-
   c('Full name:'=Sys.info()[['user']],
     'Computer name:'=Sys.info()[['nodename']],
     'Operating system:'=get_os_name(),
@@ -50,39 +50,39 @@ computerInfo <-
     'mrgsolve version:'=getNamespaceVersion('mrgsolve') %>% as.character(),
     'campsisqual version:'=getNamespaceVersion('campsisqual') %>% as.character()
     )
-computerInfoDf <- data.frame(computerInfo)
-kableExtra::kbl(computerInfoDf, col.names=NULL, booktabs=T) %>% print()
+computer_info_df <- data.frame(computer_info)
+kableExtra::kbl(computer_info_df, col.names=NULL, booktabs=T) %>% print()
 ```
 
 # Model qualification summary
 
 ```{r}
-obsAll <- sum(qual_summary@tables %>% purrr::map_int(~nrow(.x)))
-obsOK <- sum(qual_summary@tables %>% purrr::map_int(~nrow(.x %>% dplyr::filter(Pass=='OK'))))
+obs_all <- sum(qual_summary@tables %>% purrr::map_int(~nrow(.x)))
+obs_ok <- sum(qual_summary@tables %>% purrr::map_int(~nrow(.x %>% dplyr::filter(Pass=='OK'))))
 if (is.null(original_model) || original_model=='') {
-  summaryTable <- NULL
+  summary_table <- NULL
 } else {
-  summaryTable <- c('Original model:'=original_model)
+  summary_table <- c('Original model:'=original_model)
 }
-summaryTable <- summaryTable %>% append(
+summary_table <- summary_table %>% append(
   c('Simulation engine:'=qual_summary@dest,
     'Relative tolerance:'=qual_summary@tolerance,
     'Variable(s) compared:'=paste(qual_summary@variables, collapse=', '),
     'No of ind. compared:'=length(qual_summary@ids),
-    'No of obs. compared:'=as.character(obsAll),
-    'Success rate:'=sprintf('%.1f%%', obsOK/obsAll*100)
+    'No of obs. compared:'=as.character(obs_all),
+    'Success rate:'=sprintf('%.1f%%', obs_ok/obs_all*100)
     )
 )
-summaryTable <- data.frame(summaryTable)
-kableExtra::kbl(summaryTable, col.names=NULL, booktabs=T) %>% print()
+summary_table <- data.frame(summary_table)
+kableExtra::kbl(summary_table, col.names=NULL, booktabs=T) %>% print()
 ```
 \vspace{8pt}
 
 ```{r}
-qualificationTime <- Sys.time()
-qualificationTimeString <- format(qualificationTime, '%Y-%m-%d %H:%M:%S')
-qualOK <- qual_summary %>% passed()
-if (qualOK) {cat(sprintf('Status: \\textcolor{teal}{\\textbf{SUCCESSFUL}} on %s', qualificationTimeString))} else {cat(sprintf('\\textbf{Status:} \\textcolor{red}{\\textbf{FAIL}} on %s\n', qualificationTimeString))}
+qualification_time <- Sys.time()
+qualification_time_string <- format(qualification_time, '%Y-%m-%d %H:%M:%S')
+qual_ok <- qual_summary %>% passed()
+if (qual_ok) {cat(sprintf('Status: \\textcolor{teal}{\\textbf{SUCCESSFUL}} on %s', qualification_time_string))} else {cat(sprintf('\\textbf{Status:} \\textcolor{red}{\\textbf{FAIL}} on %s\n', qualification_time_string))}
 ```
 
 ```{r}
@@ -115,8 +115,8 @@ kableExtra::kbl(table, booktabs=T, longtable=TRUE, escape=FALSE) %>%
 for (index in seq_along(qual_summary@ids)) {
   id <- qual_summary@ids[index]
   original_id <- qual_summary@original_ids[index]
-  summaryID <- qual_summary@summary %>% dplyr::filter(ID==id)
-  vector <- as.vector(as.matrix(summaryID %>% dplyr::select(-ID)))
+  summary_id <- qual_summary@summary %>% dplyr::filter(ID==id)
+  vector <- as.vector(as.matrix(summary_id %>% dplyr::select(-ID)))
   failed <- !all(vector=='PASS')
   for (variable in qual_summary@variables) {
     condition <- !failed_only || (failed_only && failed)

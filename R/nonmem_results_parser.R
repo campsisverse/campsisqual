@@ -5,22 +5,22 @@
 #' @export
 read.nonmem <- function(file) {
   # Read all lines from NONMEM results file (*.ext, *.tab, *.cov, etc, ...)
-  fileConn <- file(file)
-  allLines <- readLines(con = fileConn)
-  close(fileConn)
+  file_conn <- file(file)
+  all_lines <- readLines(con = file_conn)
+  close(file_conn)
 
   # Retrieve all table indexes
-  allTableIndexes <- grep("^TABLE NO\\. .*$", x = allLines, ignore.case = T)
+  all_table_indexes <- grep("^TABLE NO\\. .*$", x = all_lines, ignore.case = T)
 
-  if (length(allTableIndexes) == 0) {
+  if (length(all_table_indexes) == 0) {
     stop("No NONMEM table was recognised")
   }
 
   # Extract tables
   tables <- purrr::map2(
-    .x = allTableIndexes,
-    .y = c(allTableIndexes[-1], length(allLines) + 1),
-    .f = ~ read.nonmemtable(allLines[seq(.x, .y - 1, by = 1)])
+    .x = all_table_indexes,
+    .y = c(all_table_indexes[-1], length(all_lines) + 1),
+    .f = ~ read.nonmemtable(all_lines[seq(.x, .y - 1, by = 1)])
   )
   return(tables)
 }

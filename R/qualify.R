@@ -148,8 +148,8 @@ fix_rxode_bug <- function(campsis, model, dataset, dest) {
 append_original_id <- function(x, dataset) {
   if (is(dataset, "data.frame")) {
     if ("ORIGINAL_ID" %in% colnames(dataset)) {
-      idPairs <- dataset %>% dplyr::select(ID, ORIGINAL_ID) %>% dplyr::distinct()
-      x <- x %>% dplyr::left_join(idPairs, by = "ID") %>% dplyr::relocate(ID, ORIGINAL_ID)
+      id_pairs <- dataset %>% dplyr::select(ID, ORIGINAL_ID) %>% dplyr::distinct()
+      x <- x %>% dplyr::left_join(id_pairs, by = "ID") %>% dplyr::relocate(ID, ORIGINAL_ID)
     }
   }
   return(x)

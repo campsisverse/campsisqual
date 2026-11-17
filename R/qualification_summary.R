@@ -145,13 +145,11 @@ setMethod(
     notes = NULL,
     ...
   ) {
-    # tmpFile <- "C:/prj/campsisqual/data-raw/model_qualification_template.Rmd"
-
     # Export Rmd to temporary file
-    tmpFile <- tempfile(fileext = ".Rmd")
-    fileConn <- file(tmpFile)
-    writeLines(text = campsisqual::model_qualification_template, con = fileConn)
-    close(fileConn)
+    tmp_file <- tempfile(fileext = ".Rmd")
+    file_conn <- file(tmp_file)
+    writeLines(text = campsisqual::model_qualification_template, con = file_conn)
+    close(file_conn)
 
     # Filename and output directory
     output_dir <- dirname(file)
@@ -161,7 +159,7 @@ setMethod(
 
     # Render with Rmd
     rmarkdown::render(
-      input = tmpFile,
+      input = tmp_file,
       output_format = "pdf_document",
       output_file = output_file,
       output_dir = output_dir,

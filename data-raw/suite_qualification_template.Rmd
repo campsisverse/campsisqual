@@ -47,7 +47,7 @@ get_version <- function(package) {
 # Computer information
 
 ```{r}
-computerInfo <- tibble::tibble(
+computer_info <- tibble::tibble(
   Item = c(
     "Full name:",
     "User name:",
@@ -73,7 +73,7 @@ computerInfo <- tibble::tibble(
     get_version("campsisqual")
   )
 )
-kableExtra::kbl(computerInfo, format = "latex", col.names = NULL, booktabs = TRUE, linesep = "") |>
+kableExtra::kbl(computer_info, format = "latex", col.names = NULL, booktabs = TRUE, linesep = "") |>
   kableExtra::kable_styling(latex_options = "hold_position", position = "left") |>
   print()
 ```
@@ -88,9 +88,9 @@ print_summary_kable(results$summarised)
 ```
 
 ```{r}
-qualOK <- qualification_passed(results$summarised)
+qual_ok <- qualification_passed(results$summarised)
 status <- ifelse(
-  qualOK,
+  qual_ok,
   "\\textcolor{teal}{\\textbf{SUCCESSFUL}}",
   "\\textcolor{red}{\\textbf{FAILED}}"
 )
@@ -101,14 +101,14 @@ cat("The qualification is successful when no test failed and no error occurred."
 
 ```{r}
 for (package in packages) {
-  pkgResults <- results$all[[package]]
+  pkg_results <- results$all[[package]]
 
   cat("\\newpage\n\n")
   cat(sprintf("# Package %s (version %s)\n\n", package, as.character(getNamespaceVersion(package))))
 
   # Package overview (risk metrics)
   cat("## Package overview\n\n")
-  assessment <- assess_package(package, successful_tests = qualification_passed(pkgResults))
+  assessment <- assess_package(package, successful_tests = qualification_passed(pkg_results))
   categories <- table(factor(assessment$Category, levels = unique(assessment$Category)))
   assessment |>
     dplyr::mutate(Criteria = escape_latex(Criteria), `More info` = format_more_info(`More info`)) |>
@@ -124,7 +124,7 @@ for (package in packages) {
 
   # Test results by script
   cat("## Test results by script\n\n")
-  summarise_results_by_script(pkgResults) |>
+  summarise_results_by_script(pkg_results) |>
     kableExtra::kbl(format = "latex", booktabs = TRUE, longtable = TRUE, linesep = "") |>
     kableExtra::kable_styling(latex_options = c("striped", "repeat_header"), full_width = FALSE) |>
     kableExtra::column_spec(1, width = "6.5cm") |>

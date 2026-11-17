@@ -103,31 +103,31 @@ test_that("run_qualification checks its arguments", {
 test_that("render_report produces the IQ/OQ report", {
   skip_on_cran()
   skip_if_no_latex()
-  outputDir <- withr::local_tempdir()
+  output_dir <- withr::local_tempdir()
   results <- generate_qualification_results("campsismod")
 
-  report <- render_report(results, packages = "campsismod", fullname = "John Doe", output_dir = outputDir)
+  report <- render_report(results, packages = "campsismod", fullname = "John Doe", output_dir = output_dir)
   expect_true(file.exists(report))
   expect_equal(basename(report), paste0(get_report_filename("campsismod", initials = "JD"), ".pdf"))
-  expect_equal(list.files(outputDir), basename(report)) # Intermediate files are not kept
+  expect_equal(list.files(output_dir), basename(report)) # Intermediate files are not kept
 
   # Initials can be provided
-  report <- render_report(results, packages = "campsismod", fullname = "John Doe", initials = "JOD", output_dir = outputDir)
+  report <- render_report(results, packages = "campsismod", fullname = "John Doe", initials = "JOD", output_dir = output_dir)
   expect_match(basename(report), "_JOD_")
 
   # Results without failures and warnings (e.g. produced by an older version of campsisqual)
   results$failures <- NULL
   results$warnings <- NULL
   unlink(report)
-  report <- render_report(results, packages = "campsismod", fullname = "John Doe", output_dir = outputDir)
+  report <- render_report(results, packages = "campsismod", fullname = "John Doe", output_dir = output_dir)
   expect_true(file.exists(report))
 })
 
 test_that("render_report warns if the report cannot be rendered", {
   skip_if_no_latex()
-  outputDir <- withr::local_tempdir()
+  output_dir <- withr::local_tempdir()
   expect_warning(
-    report <- render_report(list(), packages = "campsismod", fullname = "John Doe", output_dir = outputDir),
+    report <- render_report(list(), packages = "campsismod", fullname = "John Doe", output_dir = output_dir),
     "Qualification report could not be rendered"
   )
   expect_null(report)
@@ -142,20 +142,20 @@ test_that("run_qualification qualifies campsismod and produces the IQ/OQ report"
     dir.exists(file.path(find.package("campsismod"), "tests", "testthat")),
     "campsismod was installed without its tests"
   )
-  outputDir <- withr::local_tempdir()
-  optionsBefore <- options()[c("campsis.options", "campsisqual.options")]
+  output_dir <- withr::local_tempdir()
+  options_before <- options()[c("campsis.options", "campsisqual.options")]
 
   output <- capture.output(
-    qualOK <- run_qualification(packages = "campsismod", fullname = "John Doe", output_dir = outputDir, cpu = 1L)
+    qual_ok <- run_qualification(packages = "campsismod", fullname = "John Doe", output_dir = output_dir, cpu = 1L)
   )
-  expect_type(qualOK, "logical")
-  expect_length(qualOK, 1)
+  expect_type(qual_ok, "logical")
+  expect_length(qual_ok, 1)
 
   # Report is produced in the output directory
-  files <- list.files(outputDir)
+  files <- list.files(output_dir)
   expect_equal(files, paste0(get_report_filename("campsismod", initials = "JD"), ".pdf"))
-  expect_gt(file.size(file.path(outputDir, files)), 0)
+  expect_gt(file.size(file.path(output_dir, files)), 0)
 
   # Options set for the qualification are restored
-  expect_equal(options()[c("campsis.options", "campsisqual.options")], optionsBefore)
+  expect_equal(options()[c("campsis.options", "campsisqual.options")], options_before)
 })

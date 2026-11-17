@@ -266,10 +266,10 @@ run_qualification <- function(
   }
 
   # Check if qualification passed
-  qualOK <- results$summarised %>% qualification_passed()
-  print(ifelse(qualOK, "QUALIFICATION SUCCESSFUL", "QUALIFICATION FAILED"))
+  qual_ok <- results$summarised %>% qualification_passed()
+  print(ifelse(qual_ok, "QUALIFICATION SUCCESSFUL", "QUALIFICATION FAILED"))
 
-  return(qualOK)
+  return(qual_ok)
 }
 
 #'
@@ -434,7 +434,7 @@ render_report <- function(results, packages, fullname, initials = NULL, output_d
   if (is.null(initials)) {
     initials <- get_initials(fullname)
   }
-  reportFilename <- get_report_filename(packages = packages, initials = initials)
+  report_filename <- get_report_filename(packages = packages, initials = initials)
   title <- ifelse(
     "ecampsis" %in% packages,
     "e-Campsis qualification report",
@@ -442,11 +442,11 @@ render_report <- function(results, packages, fullname, initials = NULL, output_d
   )
 
   # Export Rmd template to a temporary working directory
-  workDir <- tempfile(pattern = "campsisqual_report_")
-  dir.create(workDir)
-  on.exit(unlink(workDir, recursive = TRUE), add = TRUE)
-  rmdFile <- file.path(workDir, "qualification_report.Rmd")
-  writeLines(text = campsisqual::suite_qualification_template, con = rmdFile)
+  work_dir <- tempfile(pattern = "campsisqual_report_")
+  dir.create(work_dir)
+  on.exit(unlink(work_dir, recursive = TRUE), add = TRUE)
+  rmd_file <- file.path(work_dir, "qualification_report.Rmd")
+  writeLines(text = campsisqual::suite_qualification_template, con = rmd_file)
 
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -454,16 +454,16 @@ render_report <- function(results, packages, fullname, initials = NULL, output_d
 
   report <- tryCatch(
     rmarkdown::render(
-      input = rmdFile,
+      input = rmd_file,
       params = list(
         set_title = title,
         results = results,
         packages = packages,
         fullname = fullname
       ),
-      output_file = reportFilename,
+      output_file = report_filename,
       output_dir = output_dir,
-      intermediates_dir = workDir,
+      intermediates_dir = work_dir,
       # Template can use the internal functions of campsisqual
       envir = new.env(parent = asNamespace("campsisqual")),
       quiet = TRUE

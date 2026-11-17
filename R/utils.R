@@ -39,8 +39,8 @@ escape_latex <- function(x) {
 format_message <- function(x, max_chars = 300) {
   x <- gsub("\033\\[[0-9;]*m", "", x)
   x <- trimws(gsub("\\s+", " ", x))
-  tooLong <- nchar(x) > max_chars
-  x[tooLong] <- paste0(substr(x[tooLong], 1, max_chars), "...")
+  too_long <- nchar(x) > max_chars
+  x[too_long] <- paste0(substr(x[too_long], 1, max_chars), "...")
   return(escape_latex(x))
 }
 

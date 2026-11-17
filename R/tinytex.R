@@ -10,17 +10,17 @@ check_tinytex_installation <- function() {
 Well done. Your installation works well.
 \\end{document}"
 
-  tmpDir <- tempdir()
-  outputFile <- "check_tinytex.pdf"
-  texFile <- "check_tinytex.tex"
+  tmp_dir <- tempdir()
+  output_file <- "check_tinytex.pdf"
+  tex_file <- "check_tinytex.tex"
 
   out <- tryCatch(
     {
-      with_dir(tmpDir, {
-        fileConn <- file(texFile)
-        writeLines(template, fileConn)
-        close(fileConn)
-        tinytex::pdflatex(texFile, pdf_file = outputFile)
+      with_dir(tmp_dir, {
+        file_conn <- file(tex_file)
+        writeLines(template, file_conn)
+        close(file_conn)
+        tinytex::pdflatex(tex_file, pdf_file = output_file)
       })
     },
     error = function(e) {
@@ -31,7 +31,7 @@ Well done. Your installation works well.
   if (is(out, "error")) {
     return(FALSE)
   } else if (is.character(out)) {
-    return(out == outputFile)
+    return(out == output_file)
   } else {
     print("Unknown error")
     return(FALSE)

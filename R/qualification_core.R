@@ -13,8 +13,8 @@ are_equal <- function(x, xref, tolerance, id, type) {
     length(x) == length(xref),
     msg = sprintf("x and xref (%s) do not have the same length (ID=%s)", type, as.character(id))
   )
-  relativeChange <- (x - xref) / xref
-  return(abs(relativeChange) < tolerance | (x == 0 & xref == 0))
+  relative_change <- (x - xref) / xref
+  return(abs(relative_change) < tolerance | (x == 0 & xref == 0))
 }
 
 #' Compare NONMEM results with CAMPSIS results, according to the given tolerance.
@@ -57,15 +57,15 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
   }
 
   # Instantiate a new qualification summary object
-  qualificationSummary <- new("qualification_summary")
-  qualificationSummary@ids <- as.integer(ids)
-  qualificationSummary@original_ids <- as.character(original_ids)
-  qualificationSummary@variables <- variables
-  qualificationSummary@ipred_source <- ipred_source
-  qualificationSummary@dest <- dest
-  qualificationSummary@tolerance <- tolerance
+  qualification_summary <- new("qualification_summary")
+  qualification_summary@ids <- as.integer(ids)
+  qualification_summary@original_ids <- as.character(original_ids)
+  qualification_summary@variables <- variables
+  qualification_summary@ipred_source <- ipred_source
+  qualification_summary@dest <- dest
+  qualification_summary@tolerance <- tolerance
 
-  variablesOfInterest <- variables
+  vars_of_interest <- variables
 
   # Init qualification dataframe
   qualification <- data.frame(ID = ids)
@@ -80,12 +80,12 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
     ref_subj <- ref_results %>%
       dplyr::filter(ID == id) %>%
       dplyr::mutate(Simulation = ipred_source) %>%
-      dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(variablesOfInterest)))
+      dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(vars_of_interest)))
 
     campsis_subj <- campsis_results %>%
       dplyr::filter(ID == id) %>%
       dplyr::mutate(Simulation = dest) %>%
-      dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(variablesOfInterest)))
+      dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(vars_of_interest)))
 
     if (!all(are_equal(ref_subj$TIME, campsis_subj$TIME, tolerance = tolerance, id = id, type = "TIME"))) {
       stop(paste0("Times are not identical between NONMEM and CAMPSIS for subject ", id))
@@ -93,43 +93,43 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
 
     subj <- dplyr::bind_rows(campsis_subj, ref_subj)
     subj <- subj %>%
-      tidyr::gather(key = "Variable", value = "value", dplyr::all_of(variablesOfInterest), -ID, -TIME, -Simulation)
+      tidyr::gather(key = "Variable", value = "value", dplyr::all_of(vars_of_interest), -ID, -TIME, -Simulation)
     subj$Pass <- FALSE
 
     # Qualification results summary
-    for (output in variablesOfInterest) {
-      refOutput <- subj %>%
+    for (output in vars_of_interest) {
+      ref_output <- subj %>%
         dplyr::filter(Variable == output & Simulation == ipred_source) %>%
         dplyr::pull(value)
 
-      campsisOutput <- subj %>%
+      campsis_output <- subj %>%
         dplyr::filter(Variable == output & Simulation == dest) %>%
         dplyr::pull(value)
 
-      sameOutput <- are_equal(refOutput, campsisOutput, tolerance = tolerance, id = id, type = "OUTPUT")
-      if (any(is.na(sameOutput))) {
+      same_output <- are_equal(ref_output, campsis_output, tolerance = tolerance, id = id, type = "OUTPUT")
+      if (any(is.na(same_output))) {
         stop(paste0("NA's detected in original ID ", original_id))
       }
-      if (all(sameOutput)) {
+      if (all(same_output)) {
         qualification[which(qualification$ID == id), output] <- "PASS"
       } else {
         qualification[which(qualification$ID == id), output] <- "FAIL"
       }
 
       subj <- subj %>%
-        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == ipred_source & sameOutput, TRUE, Pass))
+        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == ipred_source & same_output, TRUE, Pass))
       subj <- subj %>%
-        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == dest & sameOutput, TRUE, Pass))
+        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == dest & same_output, TRUE, Pass))
     }
     subj$Pass <- ifelse(subj$Pass, "OK", "NOK")
 
     # All pass
-    allPass <- all(qualification[which(qualification$ID == id), variablesOfInterest] == "PASS")
-    allPass <- ifelse(allPass, "Pass", "Fail")
+    all_pass <- all(qualification[which(qualification$ID == id), vars_of_interest] == "PASS")
+    all_pass <- ifelse(all_pass, "Pass", "Fail")
 
     # Saving plots
     plots <- list()
-    for (output in variablesOfInterest) {
+    for (output in vars_of_interest) {
       data <- subj %>%
         dplyr::filter(Variable == output) %>%
         dplyr::mutate(Simulation = factor(Simulation, levels = c(ipred_source, dest)))
@@ -141,39 +141,39 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
         ggplot2::scale_colour_manual(values = c("NOK" = "#FF0000", "OK" = "#008080"), drop = FALSE)
       plots[[output]] <- p
     }
-    qualificationSummary@plots[[as.character(id)]] <- plots
+    qualification_summary@plots[[as.character(id)]] <- plots
 
     # Saving table output
-    timeCAMPSIS <- paste0("Time ", dest)
-    timeNONMEM <- paste0("Time ", ipred_source)
+    time_campsis <- paste0("Time ", dest)
+    time_ref <- paste0("Time ", ipred_source)
 
     tryCatch(
       {
-        subjNONMEM <- subj %>%
+        subj_ref <- subj %>%
           dplyr::filter(Simulation == ipred_source) %>%
           tidyr::spread(Simulation, value) %>%
-          dplyr::rename_at(.vars = "TIME", .funs = ~timeNONMEM)
+          dplyr::rename_at(.vars = "TIME", .funs = ~time_ref)
 
-        subjCAMPSIS <- subj %>%
+        subj_campsis <- subj %>%
           dplyr::filter(Simulation == dest) %>%
           tidyr::spread(Simulation, value) %>%
-          dplyr::rename_at(.vars = "TIME", .funs = ~timeCAMPSIS)
+          dplyr::rename_at(.vars = "TIME", .funs = ~time_campsis)
       },
       error = function(cond) {
         warning(paste0("Problem with original ID ", original_id))
       }
     )
 
-    subjNONMEM <- tibble::as_tibble(subjNONMEM)
-    subjNONMEM <- subjNONMEM %>%
-      tibble::add_column(TIME_CAMPSIS = subjCAMPSIS[, timeCAMPSIS], .after = timeNONMEM) %>%
-      dplyr::rename_at(.vars = "TIME_CAMPSIS", .funs = ~timeCAMPSIS)
-    subjNONMEM[, dest] <- subjCAMPSIS[, dest]
-    qualificationSummary@tables[[as.character(id)]] <- subjNONMEM
+    subj_ref <- tibble::as_tibble(subj_ref)
+    subj_ref <- subj_ref %>%
+      tibble::add_column(TIME_CAMPSIS = subj_campsis[, time_campsis], .after = time_ref) %>%
+      dplyr::rename_at(.vars = "TIME_CAMPSIS", .funs = ~time_campsis)
+    subj_ref[, dest] <- subj_campsis[, dest]
+    qualification_summary@tables[[as.character(id)]] <- subj_ref
   }
 
   # Saving summary
-  qualificationSummary@summary <- qualification
+  qualification_summary@summary <- qualification
 
-  return(qualificationSummary)
+  return(qualification_summary)
 }
