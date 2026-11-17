@@ -29,8 +29,8 @@ test_that("summarise_riskmetric overrides some metrics for Campsis packages", {
   expect_equal(summarise_riskmetric(metric, "campsisnca")$Result, "No")
 
   metric <- structure(FALSE, class = c("logical", "pkg_metric_online_code_coverage"))
-  expect_equal(summarise_riskmetric(metric, "campsismod")$`More info`, "https://app.codecov.io/gh/Calvagone/campsismod")
-  expect_equal(summarise_riskmetric(metric, "campsisqual")$Result, "No")
+  expect_equal(summarise_riskmetric(metric, "campsismod")$`More info`, "https://app.codecov.io/gh/campsisverse/campsismod")
+  expect_equal(summarise_riskmetric(metric, "campsisqual")$Result, "Yes")
 
   metric <- structure(TRUE, class = c("logical", "pkg_metric_has_news"))
   expect_equal(
