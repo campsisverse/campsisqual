@@ -4,6 +4,7 @@
 * Add codecov badge to README #29
 * Migrate package to campsisverse organisation #30
 * Campsismod should be listed under Imports rather than Depends #31
+* Remove all notes from R CMD Check #32
 
 # campsisqual 1.5.0
 

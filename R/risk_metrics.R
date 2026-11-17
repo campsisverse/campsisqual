@@ -43,7 +43,7 @@ summarise_riskmetric.pkg_metric_has_vignettes <- function(x, package) {
 
   if (package %in% c("campsismod", "campsis")) {
     result <- "Yes"
-    info <- sprintf("https://calvagone.github.io/%s.doc/articles", package)
+    info <- sprintf("https://campsisverse.github.io/%s.doc/articles", package)
   }
 
   return(tibble::tibble(Criteria = "Has vignettes?", Result = result, `More info` = info, Category = "Documentation"))
@@ -60,7 +60,7 @@ summarise_riskmetric.pkg_metric_has_website <- function(x, package) {
 }
 
 get_package_branch <- function(package) {
-  if (package %in% c("campsismod", "campsis", "campsisnca", "campsismisc", "campsistrans", "ecampsis")) {
+  if (package %in% c("campsismod", "campsis", "campsisnca", "campsismisc", "campsistrans")) {
     return("main")
   } else {
     return("master")
@@ -141,9 +141,9 @@ summarise_riskmetric.pkg_metric_successful_tests <- function(x, package) {
 
 #' @export
 summarise_riskmetric.pkg_metric_online_code_coverage <- function(x, package) {
-  if (package %in% c("campsismod", "campsis", "campsisnca", "campsismisc")) {
+  if (package %in% c("campsismod", "campsis", "campsisnca", "campsismisc", "campsisqual")) {
     result <- "Yes"
-    info <- sprintf("https://app.codecov.io/gh/Calvagone/%s", package)
+    info <- sprintf("https://app.codecov.io/gh/campsisverse/%s", package)
   } else {
     result <- risk_metric_result(x)
     info <- risk_metric_to_string(x)
@@ -203,16 +203,16 @@ assess_package <- function(package, successful_tests) {
   class(successful_tests) <- c(class(successful_tests), "pkg_metric_successful_tests")
 
   # Add metrics for online code coverage
-  onlineCodeCoverage <- FALSE # By default
-  class(onlineCodeCoverage) <- c(class(onlineCodeCoverage), "pkg_metric_online_code_coverage")
+  online_code_coverage <- FALSE # By default
+  class(online_code_coverage) <- c(class(online_code_coverage), "pkg_metric_online_code_coverage")
 
   assessment[[length(assessment) + 1]] <- successful_tests
-  assessment[[length(assessment) + 1]] <- onlineCodeCoverage
+  assessment[[length(assessment) + 1]] <- online_code_coverage
 
-  retValue <- assessment %>%
+  ret_value <- assessment %>%
     purrr::map(~ summarise_riskmetric(.x, package = package)) %>%
     purrr::list_rbind() %>%
     dplyr::arrange(.data$Category)
 
-  return(retValue)
+  return(ret_value)
 }

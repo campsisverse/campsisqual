@@ -59,7 +59,7 @@ run_qualification(
     "campsisqual"
   ),
   fullname = "<YOUR_NAME>",
-  output_dir = "<OUTPUT_DIRECTORY>"
+  output_dir = getwd()
 )
 ```
 

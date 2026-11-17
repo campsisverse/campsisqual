@@ -5,7 +5,7 @@
 #' @return cleaned results
 #' @importFrom dplyr as_tibble group_by rename summarise
 clean_package_results <- function(raw) {
-  retValue <- raw %>%
+  ret_value <- raw %>%
     dplyr::as_tibble() %>%
     dplyr::rename(Test = "test") %>%
     dplyr::group_by(.data$file, .data$context, .data$Test) %>%
@@ -17,7 +17,7 @@ clean_package_results <- function(raw) {
       Skipped = sum(as.numeric(.data$skipped)),
       .groups = "drop"
     )
-  return(retValue)
+  return(ret_value)
 }
 
 #'
@@ -74,18 +74,18 @@ print_summary_kable <- function(x) {
 #' @importFrom dplyr summarise_if
 qualification_passed <- function(results) {
   row <- results %>% dplyr::summarise_if(is.numeric, sum)
-  retValue <- TRUE
+  ret_value <- TRUE
   if (row$Failed > 0) {
-    retValue <- FALSE
+    ret_value <- FALSE
   }
   # Too strict, so disabled
   # if (row$Warnings > 0) {
-  #   retValue <- FALSE
+  #   ret_value <- FALSE
   # }
   if (row$Errors > 0) {
-    retValue <- FALSE
+    ret_value <- FALSE
   }
-  return(retValue)
+  return(ret_value)
 }
 
 bind_package_and_version <- function(x, package) {
@@ -159,11 +159,11 @@ collect_package_warnings <- function(x) {
       append(warnings)
   }
 
-  retValue <- tibble::tibble(warning = warningMessages) %>%
+  ret_value <- tibble::tibble(warning = warningMessages) %>%
     dplyr::group_by(.data$warning) %>%
     dplyr::summarise(occurrences = dplyr::n())
 
-  return(retValue)
+  return(ret_value)
 }
 
 #'
@@ -219,7 +219,7 @@ run_qualification <- function(
 ) {
   if (
     !all(
-      packages %in% c("campsismod", "campsis", "campsisnca", "campsismisc", "campsisqual", "campsistrans", "ecampsis")
+      packages %in% c("campsismod", "campsis", "campsisnca", "campsismisc", "campsisqual", "campsistrans")
     )
   ) {
     stop("Invalid packages. Only packages from the Campsis suite can be qualified.")
@@ -237,11 +237,11 @@ run_qualification <- function(
     stop("TinyTeX is not properly installed. Please install it using tinytex::install_tinytex()")
   }
 
-  isWindows <- tolower(get_os_name()) %>% startsWith("win")
-  if (isWindows) {
-    defaultPath <- "C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools"
-    if (file.exists(defaultPath)) {
-      Sys.setenv("RSTUDIO_PANDOC" = defaultPath)
+  is_windows <- tolower(get_os_name()) %>% startsWith("win")
+  if (is_windows) {
+    default_path <- "C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools"
+    if (file.exists(default_path)) {
+      Sys.setenv("RSTUDIO_PANDOC" = default_path)
     }
   }
 
@@ -299,26 +299,26 @@ run_qualification_core <- function(
   skip_vdiffr = TRUE,
   skip_python = TRUE
 ) {
-  packagesNo <- length(packages)
-  if (packagesNo == 0) {
+  packages_no <- length(packages)
+  if (packages_no == 0) {
     stop("No packages to qualify")
   }
 
   # Check package existence and check that it was installed with tests
   for (package in packages) {
     # Check package exists (error is raised if it does not exist)
-    pkgPath <- find.package(package)
+    pkg_path <- find.package(package)
 
     # Check that testthat repo exists
-    testRepo <- file.path(pkgPath, "tests/testthat")
-    if (!dir.exists(testRepo)) {
+    test_repo <- file.path(pkg_path, "tests/testthat")
+    if (!dir.exists(test_repo)) {
       stop(paste0("Package ", package, " does not have a testthat repository"))
     }
   }
 
   # 1 CPU per package, don't create workers if not needed
-  if (packagesNo <= cpu) {
-    cpu <- packagesNo
+  if (packages_no <= cpu) {
+    cpu <- packages_no
   }
 
   # Start cluster configuration
@@ -333,26 +333,26 @@ run_qualification_core <- function(
 
   # Options and environment variables are set within the loop. When tests run
   # sequentially (current session), they must be restored afterwards.
-  optionNames <- c("campsisqual.options", "campsistrans.options", "campsis.options", "ecampsis.options")
-  oldOptions <- lapply(stats::setNames(nm = optionNames), getOption)
-  oldNotCran <- Sys.getenv("NOT_CRAN", unset = NA)
+  option_names <- c("campsisqual.options", "campsistrans.options", "campsis.options")
+  old_options <- lapply(stats::setNames(nm = option_names), getOption)
+  old_not_cran <- Sys.getenv("NOT_CRAN", unset = NA)
   on.exit(
     {
-      options(oldOptions)
-      if (is.na(oldNotCran)) Sys.unsetenv("NOT_CRAN") else Sys.setenv("NOT_CRAN" = oldNotCran)
+      options(old_options)
+      if (is.na(old_not_cran)) Sys.unsetenv("NOT_CRAN") else Sys.setenv("NOT_CRAN" = old_not_cran)
     },
     add = TRUE
   )
 
   # Progress bar
-  pb <- pbmcapply::progressBar(max = packagesNo, style = "ETA")
+  pb <- pbmcapply::progressBar(max = packages_no, style = "ETA")
   progress <- function(n) utils::setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
 
   # foreach iterator, declared to avoid the 'no visible binding' note in R CMD check
   i <- NULL
 
-  testResults <- foreach::foreach(i = seq_along(packages), .combine = append, .options.snow = opts) %op%
+  test_results <- foreach::foreach(i = seq_along(packages), .combine = append, .options.snow = opts) %op%
     {
       package <- packages[i]
       Sys.setenv("NOT_CRAN" = TRUE)
@@ -360,38 +360,35 @@ run_qualification_core <- function(
       options(campsisqual.options = list(RUNNING_QUALIFICATION = TRUE))
       options(campsistrans.options = list(SKIP_PHARMPY_TESTS = skip_python))
       options(campsis.options = list(SKIP_LONG_TESTS = FALSE, SKIP_VDIFFR_TESTS = skip_vdiffr))
-      options(
-        ecampsis.options = list(SKIP_LONG_TESTS = FALSE, SKIP_VDIFFR_TESTS = skip_vdiffr, SKIP_NM_IMPORT_TESTS = FALSE)
-      )
-      retValue <- list()
-      retValue[[package]] <- testthat::test_package(
+      ret_value <- list()
+      ret_value[[package]] <- testthat::test_package(
         package,
         reporter = c("list"),
         stop_on_failure = FALSE,
         stop_on_warning = FALSE
       )
-      return(retValue)
+      return(ret_value)
     }
   close(pb)
 
   # Clean test results
-  testResultsCleaned <- testResults %>%
+  test_results_cleaned <- test_results %>%
     purrr::map(~ clean_package_results(.x))
 
   # Collect warnings
-  warnings <- testResults %>%
+  warnings <- test_results %>%
     purrr::map(~ collect_package_warnings(.x))
 
   # Collect failures and errors
-  failures <- testResults %>%
+  failures <- test_results %>%
     purrr::map(~ collect_package_failures(.x))
 
   summarisedResults <- packages %>%
     purrr::map_df(.f = function(package) {
-      return(testResultsCleaned[[package]] %>% bind_package_and_version(package))
+      return(test_results_cleaned[[package]] %>% bind_package_and_version(package))
     })
 
-  return(list(summarised = summarisedResults, all = testResultsCleaned, warnings = warnings, failures = failures))
+  return(list(summarised = summarisedResults, all = test_results_cleaned, warnings = warnings, failures = failures))
 }
 
 #'
@@ -412,11 +409,10 @@ get_initials <- function(fullname) {
 #' @param date date of the qualification
 #' @return report filename, character
 get_report_filename <- function(packages, initials, date = Sys.Date()) {
-  eCampsisQual <- "ecampsis" %in% packages
   return(sprintf(
     "IQ_OQ_%s-%s_%s_%s_%s",
-    ifelse(eCampsisQual, "e-Campsis", "Campsis_Suite"),
-    as.character(getNamespaceVersion(ifelse(eCampsisQual, "ecampsis", "campsis"))),
+    "Campsis_Suite",
+    as.character(getNamespaceVersion("campsis")),
     get_os_name(short = TRUE),
     initials,
     format(date, "%Y%m%d")
@@ -438,11 +434,7 @@ render_report <- function(results, packages, fullname, initials = NULL, output_d
     initials <- get_initials(fullname)
   }
   report_filename <- get_report_filename(packages = packages, initials = initials)
-  title <- ifelse(
-    "ecampsis" %in% packages,
-    "e-Campsis qualification report",
-    "Campsis suite qualification report"
-  )
+  title <- "Campsis suite qualification report"
 
   # Export Rmd template to a temporary working directory
   work_dir <- tempfile(pattern = "campsisqual_report_")
