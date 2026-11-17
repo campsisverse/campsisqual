@@ -15,6 +15,7 @@
 #' @slot model_name name of the model being qualified, e.g. "RUN001"
 #' @slot tolerance relative tolerance used for qualification, numeric
 #'
+#' @importFrom methods is new
 #' @export
 setClass(
   "qualification_summary",
@@ -115,7 +116,7 @@ setGeneric("passed", function(summary) {
 
 #' @rdname passed
 setMethod("passed", signature = c("qualification_summary"), definition = function(summary) {
-  vector <- as.vector(as.matrix(summary@summary %>% dplyr::select(-ID)))
+  vector <- as.vector(as.matrix(summary@summary %>% dplyr::select(-"ID")))
   return(all(vector == "PASS"))
 })
 

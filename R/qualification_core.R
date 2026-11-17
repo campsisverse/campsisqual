@@ -46,9 +46,9 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
   ids <- unique(campsis_results$ID)
   if ("ORIGINAL_ID" %in% colnames(campsis_results)) {
     original_ids <- campsis_results %>%
-      dplyr::select(ID, ORIGINAL_ID) %>%
+      dplyr::select("ID", "ORIGINAL_ID") %>%
       dplyr::distinct() %>%
-      dplyr::pull(ORIGINAL_ID)
+      dplyr::pull("ORIGINAL_ID")
     if (original_ids %>% length() != ids %>% length()) {
       stop("Incorrect column ORIGINAL_ID")
     }
@@ -78,12 +78,12 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
     original_id <- original_ids[index]
 
     ref_subj <- ref_results %>%
-      dplyr::filter(ID == id) %>%
+      dplyr::filter(.data$ID == id) %>%
       dplyr::mutate(Simulation = ipred_source) %>%
       dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(vars_of_interest)))
 
     campsis_subj <- campsis_results %>%
-      dplyr::filter(ID == id) %>%
+      dplyr::filter(.data$ID == id) %>%
       dplyr::mutate(Simulation = dest) %>%
       dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(vars_of_interest)))
 
@@ -93,18 +93,18 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
 
     subj <- dplyr::bind_rows(campsis_subj, ref_subj)
     subj <- subj %>%
-      tidyr::gather(key = "Variable", value = "value", dplyr::all_of(vars_of_interest), -ID, -TIME, -Simulation)
+      tidyr::gather(key = "Variable", value = "value", dplyr::all_of(vars_of_interest), -"ID", -"TIME", -"Simulation")
     subj$Pass <- FALSE
 
     # Qualification results summary
     for (output in vars_of_interest) {
       ref_output <- subj %>%
-        dplyr::filter(Variable == output & Simulation == ipred_source) %>%
-        dplyr::pull(value)
+        dplyr::filter(.data$Variable == output & .data$Simulation == ipred_source) %>%
+        dplyr::pull("value")
 
       campsis_output <- subj %>%
-        dplyr::filter(Variable == output & Simulation == dest) %>%
-        dplyr::pull(value)
+        dplyr::filter(.data$Variable == output & .data$Simulation == dest) %>%
+        dplyr::pull("value")
 
       same_output <- are_equal(ref_output, campsis_output, tolerance = tolerance, id = id, type = "OUTPUT")
       if (any(is.na(same_output))) {
@@ -117,9 +117,13 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
       }
 
       subj <- subj %>%
-        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == ipred_source & same_output, TRUE, Pass))
+        dplyr::mutate(
+          Pass = ifelse(.data$Variable == output & .data$Simulation == ipred_source & same_output, TRUE, .data$Pass)
+        )
       subj <- subj %>%
-        dplyr::mutate(Pass = ifelse(Variable == output & Simulation == dest & same_output, TRUE, Pass))
+        dplyr::mutate(
+          Pass = ifelse(.data$Variable == output & .data$Simulation == dest & same_output, TRUE, .data$Pass)
+        )
     }
     subj$Pass <- ifelse(subj$Pass, "OK", "NOK")
 
@@ -131,12 +135,15 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
     plots <- list()
     for (output in vars_of_interest) {
       data <- subj %>%
-        dplyr::filter(Variable == output) %>%
-        dplyr::mutate(Simulation = factor(Simulation, levels = c(ipred_source, dest)))
-      p <- ggplot2::ggplot(data = data, mapping = ggplot2::aes(x = TIME, y = value, group = Simulation)) +
+        dplyr::filter(.data$Variable == output) %>%
+        dplyr::mutate(Simulation = factor(.data$Simulation, levels = c(ipred_source, dest)))
+      p <- ggplot2::ggplot(
+        data = data,
+        mapping = ggplot2::aes(x = .data$TIME, y = .data$value, group = .data$Simulation)
+      ) +
         ggplot2::geom_line() +
         ggplot2::facet_wrap(~Simulation) +
-        ggplot2::geom_point(mapping = ggplot2::aes(color = Pass), size = 4) +
+        ggplot2::geom_point(mapping = ggplot2::aes(color = .data$Pass), size = 4) +
         ggplot2::ylab(output) +
         ggplot2::scale_colour_manual(values = c("NOK" = "#FF0000", "OK" = "#008080"), drop = FALSE)
       plots[[output]] <- p
@@ -150,13 +157,13 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
     tryCatch(
       {
         subj_ref <- subj %>%
-          dplyr::filter(Simulation == ipred_source) %>%
-          tidyr::spread(Simulation, value) %>%
+          dplyr::filter(.data$Simulation == ipred_source) %>%
+          tidyr::spread(key = "Simulation", value = "value") %>%
           dplyr::rename_at(.vars = "TIME", .funs = ~time_ref)
 
         subj_campsis <- subj %>%
-          dplyr::filter(Simulation == dest) %>%
-          tidyr::spread(Simulation, value) %>%
+          dplyr::filter(.data$Simulation == dest) %>%
+          tidyr::spread(key = "Simulation", value = "value") %>%
           dplyr::rename_at(.vars = "TIME", .funs = ~time_campsis)
       },
       error = function(cond) {

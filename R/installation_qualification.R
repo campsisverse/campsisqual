@@ -7,14 +7,14 @@
 clean_package_results <- function(raw) {
   retValue <- raw %>%
     dplyr::as_tibble() %>%
-    dplyr::rename(Test = test) %>%
-    dplyr::group_by(file, context, Test) %>%
+    dplyr::rename(Test = "test") %>%
+    dplyr::group_by(.data$file, .data$context, .data$Test) %>%
     dplyr::summarise(
-      Passed = sum(passed),
-      Failed = sum(failed),
-      Warnings = sum(warning),
-      Errors = sum(as.numeric(error)),
-      Skipped = sum(as.numeric(skipped)),
+      Passed = sum(.data$passed),
+      Failed = sum(.data$failed),
+      Warnings = sum(.data$warning),
+      Errors = sum(as.numeric(.data$error)),
+      Skipped = sum(as.numeric(.data$skipped)),
       .groups = "drop"
     )
   return(retValue)
@@ -40,12 +40,12 @@ summarise_results <- function(results) {
 summarise_results_by_script <- function(results) {
   return(
     results %>%
-      dplyr::group_by(file) %>%
+      dplyr::group_by(.data$file) %>%
       dplyr::summarise(
         dplyr::across(dplyr::all_of(c("Passed", "Failed", "Warnings", "Errors", "Skipped")), sum),
         .groups = "drop"
       ) %>%
-      dplyr::rename(`Test script` = file)
+      dplyr::rename(`Test script` = "file")
   )
 }
 
@@ -160,7 +160,7 @@ collect_package_warnings <- function(x) {
   }
 
   retValue <- tibble::tibble(warning = warningMessages) %>%
-    dplyr::group_by(warning) %>%
+    dplyr::group_by(.data$warning) %>%
     dplyr::summarise(occurrences = dplyr::n())
 
   return(retValue)
@@ -348,6 +348,9 @@ run_qualification_core <- function(
   pb <- pbmcapply::progressBar(max = packagesNo, style = "ETA")
   progress <- function(n) utils::setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
+
+  # foreach iterator, declared to avoid the 'no visible binding' note in R CMD check
+  i <- NULL
 
   testResults <- foreach::foreach(i = seq_along(packages), .combine = append, .options.snow = opts) %op%
     {

@@ -23,6 +23,7 @@ Imports:
     kableExtra,
     lifecycle,
     magrittr,
+    methods,
     parallel,
     pbmcapply,
     purrr,
@@ -43,8 +44,6 @@ Suggests:
     rxode2,
     stringr,
     withr
-VignetteBuilder: 
-    knitr
 Config/roxygen2/version: 8.1.1
 Encoding: UTF-8
 Language: en-US

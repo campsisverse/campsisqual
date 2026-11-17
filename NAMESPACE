@@ -45,6 +45,7 @@ importFrom(campsismod,
 )
 importFrom(doSNOW,registerDoSNOW)
 importFrom(dplyr,
+  .data,
   across,
   arrange,
   as_tibble,
@@ -78,6 +79,10 @@ importFrom(kableExtra,
   kbl
 )
 importFrom(magrittr,"%>%")
+importFrom(methods,
+  is,
+  new
+)
 importFrom(parallel,
   makeCluster,
   stopCluster

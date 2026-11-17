@@ -61,12 +61,12 @@ qualify <- function(
     stop("idref must be 'dataset' or 'ipred'")
   }
   table <- table %>%
-    dplyr::filter(ID %in% refIds) %>%
-    dplyr::arrange(ID, TIME) %>%
+    dplyr::filter(.data$ID %in% refIds) %>%
+    dplyr::arrange(.data$ID, .data$TIME) %>%
     add_simulation_id_column()
   ipred <- ipred %>%
-    dplyr::filter(ID %in% refIds) %>%
-    dplyr::arrange(ID, TIME) %>%
+    dplyr::filter(.data$ID %in% refIds) %>%
+    dplyr::arrange(.data$ID, .data$TIME) %>%
     add_simulation_id_column()
 
   # Check destination engine
@@ -132,7 +132,7 @@ fix_rxode_bug <- function(campsis, model, dataset, dest) {
       # We remove time 0 from the output
       properties <- model@compartments@properties
       if (!is.null(properties %>% campsismod::find(campsismod::LagTime(1))) && !(0 %in% times)) {
-        campsis <- campsis %>% dplyr::filter(TIME != 0)
+        campsis <- campsis %>% dplyr::filter(.data$TIME != 0)
       }
     }
   }
@@ -149,8 +149,8 @@ fix_rxode_bug <- function(campsis, model, dataset, dest) {
 append_original_id <- function(x, dataset) {
   if (is(dataset, "data.frame")) {
     if ("ORIGINAL_ID" %in% colnames(dataset)) {
-      id_pairs <- dataset %>% dplyr::select(ID, ORIGINAL_ID) %>% dplyr::distinct()
-      x <- x %>% dplyr::left_join(id_pairs, by = "ID") %>% dplyr::relocate(ID, ORIGINAL_ID)
+      id_pairs <- dataset %>% dplyr::select("ID", "ORIGINAL_ID") %>% dplyr::distinct()
+      x <- x %>% dplyr::left_join(id_pairs, by = "ID") %>% dplyr::relocate("ID", "ORIGINAL_ID")
     }
   }
   return(x)
@@ -166,7 +166,7 @@ append_original_id <- function(x, dataset) {
 #' @importFrom dplyr arrange group_by group_indices rename_at select
 add_simulation_id_column <- function(dataset, id = "ID") {
   if ("ID" %in% colnames(dataset) && id != "ID") {
-    dataset <- dataset %>% dplyr::select(-ID)
+    dataset <- dataset %>% dplyr::select(-"ID")
   }
   # Current ID is renamed into ORIGINAL_ID
   if (!("ORIGINAL_ID" %in% colnames(dataset))) {
@@ -177,15 +177,15 @@ add_simulation_id_column <- function(dataset, id = "ID") {
   }
   # Arrange rows by ORIGINAL_ID
   dataset <- dataset %>%
-    dplyr::arrange(ORIGINAL_ID)
+    dplyr::arrange(.data$ORIGINAL_ID)
 
   # Add simulation ID column
   dataset <- dataset %>%
     tibble::add_column(
-      ID = dataset %>% dplyr::group_by(ORIGINAL_ID) %>% dplyr::group_indices(),
+      ID = dataset %>% dplyr::group_by(.data$ORIGINAL_ID) %>% dplyr::group_indices(),
       .before = "ORIGINAL_ID"
     )
   # Arrange rows by ID
-  dataset <- dataset %>% dplyr::arrange(ID)
+  dataset <- dataset %>% dplyr::arrange(.data$ID)
   return(dataset)
 }

@@ -212,7 +212,7 @@ assess_package <- function(package, successful_tests) {
   retValue <- assessment %>%
     purrr::map(~ summarise_riskmetric(.x, package = package)) %>%
     purrr::list_rbind() %>%
-    dplyr::arrange(Category)
+    dplyr::arrange(.data$Category)
 
   return(retValue)
 }
