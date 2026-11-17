@@ -3,6 +3,7 @@
 * Remove proprietary qualification suite and issue public IQ/OQ report #28
 * Add codecov badge to README #29
 * Migrate package to campsisverse organisation #30
+* Campsismod should be listed under Imports rather than Depends #31
 
 # campsisqual 1.5.0
 

@@ -4,6 +4,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/campsisverse/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/campsisverse/campsisqual/actions)
+[![Codecov test
+coverage](https://codecov.io/gh/campsisverse/campsisqual/graph/badge.svg)](https://app.codecov.io/gh/campsisverse/campsisqual)
 <!-- badges: end -->
 
 A library dedicated to:
@@ -36,10 +38,11 @@ instance:
 
 ``` r
 install.packages(
-  c("campsismod", "campsis", "campsisnca", "campsismisc"),
+  c("campsismod", "campsis", "campsisnca"),
   INSTALL_opts = "--install-tests"
 )
-remotes::install_github("Calvagone/campsisqual", INSTALL_opts = "--install-tests")
+remotes::install_github("campsisverse/campsismisc", INSTALL_opts = "--install-tests") # Not on CRAN yet
+remotes::install_github("campsisverse/campsisqual", INSTALL_opts = "--install-tests") # Not on CRAN yet
 ```
 
 Then run the qualification:
