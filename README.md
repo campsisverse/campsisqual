@@ -6,9 +6,14 @@
 [![R-CMD-check](https://github.com/Calvagone/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/Calvagone/campsisqual/actions)
 <!-- badges: end -->
 
-A library dedicate to the qualification of the Campsis Suite and to the
-qualification of Campsis models against NONMEM, provided you have the
-`campsistrans` package.
+A library dedicated to:
+
+- the qualification of the Campsis suite (installation and operational
+  qualification, IQ/OQ), which runs the tests of each package and issues
+  a PDF report,
+- the qualification of Campsis models after import, by comparing the
+  Campsis-simulated predictions with the original predictions of the
+  modelling tool (e.g. NONMEM).
 
 ## Installation
 
@@ -18,25 +23,29 @@ Install the latest release from GitHub:
 remotes::install_github("Calvagone/campsisqual")
 ```
 
-Install TinyTEX:
+Install TinyTeX (reports are rendered in PDF with LaTeX):
 
 ``` r
 tinytex::install_tinytex()
 ```
 
-## Qualify the Campsis Suite
+## Qualify the Campsis suite
 
-Please contact Calvagone to get your certificate and the qualification
-suite.
+The packages to qualify must be installed with their tests. For
+instance:
+
+``` r
+install.packages(
+  c("campsismod", "campsis", "campsisnca", "campsismisc"),
+  INSTALL_opts = "--install-tests"
+)
+remotes::install_github("Calvagone/campsisqual", INSTALL_opts = "--install-tests")
+```
+
+Then run the qualification:
 
 ``` r
 library(campsisqual)
-credentials <- Credentials(cert = "<PATH_TO_CERTIFICATE>",
-                           key = "<PATH_TO_PRIVATE_KEY>",
-                           passphrase = "<PASSPHRASE>")
-
-suite <- QualificationSuite(path = "<PATH_TO_QUALIFICATION_SUITE>",
-                            credentials = credentials)
 
 run_qualification(
   packages = c(
@@ -47,6 +56,45 @@ run_qualification(
     "campsisqual"
   ),
   fullname = "<YOUR_NAME>",
-  qualification_suite = suite
+  output_dir = "<OUTPUT_DIRECTORY>"
 )
+```
+
+`run_qualification()` returns `TRUE` if the qualification is successful
+(i.e. no test failed and no error occurred) and writes the IQ/OQ report
+(e.g. `IQ_OQ_Campsis_Suite-<VERSION>_<OS>_<INITIALS>_<DATE>.pdf`) into
+the output directory. This report contains:
+
+- the computer information (operating system, R version, simulation
+  engines, etc.),
+- a summary table of the qualification (number of tests passed, failed,
+  with warnings, errors or skipped per package),
+- for each package: an overview of the package, based on risk metrics
+  (documentation, maintenance, testing, transparency), and the test
+  results by test script.
+
+## Qualify a Campsis model
+
+Compare the predictions of an imported Campsis model with the original
+predictions (e.g. NONMEM):
+
+``` r
+library(campsis)
+library(campsisqual)
+
+model <- read.campsis("<PATH_TO_CAMPSIS_MODEL>")
+dataset <- read.csv("<PATH_TO_NONMEM_DATASET>")
+ipred <- read.nonmem("<PATH_TO_NONMEM_OUTPUT_TABLE>")[[1]]
+
+summary <- qualify(
+  model = model,
+  dataset = dataset,
+  ipred = ipred,
+  variables = "CP",
+  dest = "rxode2"
+)
+passed(summary)
+
+# Export the qualification summary to PDF
+write(summary, file = "model_qualification.pdf")
 ```

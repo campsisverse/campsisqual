@@ -9,7 +9,6 @@ run_qualification(
   fullname,
   initials = NULL,
   output_dir = getwd(),
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -22,9 +21,7 @@ run_qualification(
 
 \item{initials}{username initials to be used in the filename. If not provided, initials are deduced from the fullname.}
 
-\item{output_dir}{output directory}
-
-\item{qualification_suite}{qualification suite object, type ?QualificationSuite for more information}
+\item{output_dir}{output directory where the qualification report is written}
 
 \item{cpu}{number of workers to be used, default is 6 workers}
 
@@ -36,5 +33,6 @@ run_qualification(
 TRUE if the qualification passes, FALSE otherwise
 }
 \description{
-Run qualification.
+Run the tests of the given packages from the Campsis suite and produce an
+IQ/OQ report in PDF (rendered with LaTeX, see `render_report()`).
 }

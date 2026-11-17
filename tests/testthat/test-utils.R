@@ -1,129 +1,57 @@
-TEST_ENGINES <- c("mrgsolve", "rxode2")
-REEXECUTE_NONMEM <- FALSE
-ENABLE_SUITE <- FALSE
+test_that("with_dir evaluates the expression in the given directory and restores the working directory", {
+  dir <- withr::local_tempdir()
+  wd <- getwd()
+  expect_equal(normalizePath(with_dir(dir, getwd())), normalizePath(dir))
+  expect_equal(getwd(), wd)
 
-#'
-#' Qualify model.
-#'
-#' @param ctlPath path to the NONMEM control file
-#' @param modelName name of the model
-#' @param dataset dataset
-#' @param modelfun function to apply on the model
-#' @param dest destination engine
-#' @param variables variables to qualify
-#' @param seed seed
-#' @param settings Campsis settings
-#' @param updateDataset update default observation compartment in Campsis dataset
-#' @param tolerance tolerance to apply on the qualification against NONMEM
-#' @param name description
-#' @param skipNM skip NONMEM model preparation
-#' @return qualification object
-#'
-qualify_model <- function(
-  ctlPath,
-  modelName,
-  dataset,
-  modelfun = NULL,
-  dest,
-  variables,
-  seed = 1,
-  settings = Settings(NOCB(TRUE)),
-  updateDataset = FALSE,
-  tolerance = 1e-2,
-  skipNM = TRUE
-) {
-  if (!is_qualification_suite_provided()) {
-    stop("No qualification suite provided")
+  expect_error(with_dir(dir, stop("boom")), "boom")
+  expect_equal(getwd(), wd)
+})
+
+test_that("get_os_name returns the OS name", {
+  os <- get_os_name()
+  expect_type(os, "character")
+  expect_length(os, 1)
+
+  short <- get_os_name(short = TRUE)
+  expect_false(grepl(" ", short))
+  if (Sys.info()[["sysname"]] == "Windows") {
+    expect_true(startsWith(os, "Windows"))
+    expect_true(startsWith(short, "Win"))
   }
-  option <- get_campsisqual_option()
-  qualSuite <- option$QUALIFICATION_SUITE
+})
 
-  modelSuiteFolder <- file.path(qualSuite, "model_suite")
-  modelFolder <- file.path(modelSuiteFolder, modelName)
-  campsisModelFolder <- file.path(modelFolder, "campsis")
-  nonmemModelFolder <- file.path(modelFolder, "nonmem")
+test_that("escape_latex escapes LaTeX special characters", {
+  expect_equal(escape_latex("a_b & 10% $ #1 {x}"), "a\\_b \\& 10\\% \\$ \\#1 \\{x\\}")
+  expect_equal(escape_latex("a~b^c"), "a\\textasciitilde{}b\\textasciicircum{}c")
+  expect_equal(escape_latex("a\\b"), "a\\textbackslash{}b")
+  expect_equal(escape_latex(c("x", "y_z")), c("x", "y\\_z"))
+})
 
-  resultsFolder <- file.path(qualSuite, "qualification_results")
-  nocb <- settings@nocb@enable
+test_that("format_message cleans, truncates and escapes test messages", {
+  expect_equal(format_message("\033[31mred\033[39m  text\n on\nlines "), "red text on lines")
+  expect_equal(format_message("a_b"), "a\\_b")
+  expect_equal(format_message(strrep("x", 10), max_chars = 4), "xxxx...")
+  expect_equal(format_message(c("ok", strrep("y", 5)), max_chars = 4), c("ok", "yyyy..."))
+  expect_equal(format_message(character(0)), character(0))
+})
 
-  # dir.create(file.path(modelFolder), showWarnings=FALSE)
-  # dir.create(file.path(resultsFolder), showWarnings=FALSE)
-
-  if (skipNM) {
-    # CAMPSIS trans object is NULL
-    object <- NULL
-
-    # We load the persisted model
-    model <- read.campsis(campsisModelFolder)
-  } else {
-    # NONMEM import
-    object <- campsistrans::importNONMEM(ctlPath)
-
-    # Conversion to CAMPSIS
-    model <- object %>% export(dest = "campsis")
-
-    # Apply function on model
-    if (!is.null(modelfun)) {
-      model <- model %>% modelfun()
-    }
-
-    # Export CAMPSIS model
-    model %>% write(campsisModelFolder)
-  }
-
-  # Update dataset (compartment index of observations is adapted automatically)
-  if (updateDataset) {
-    index <- model %>% get_compartment_index("CENTRAL")
-    dataset <- dataset %>% set_default_obs_cmt(index)
-  }
-
-  # Read individual predictions
-  ipred <- read.nonmem(file.path(nonmemModelFolder, "output.tab"))[[1]]
-
-  # Start qualification
-  qual <- qualify(
-    model = model,
-    dataset = dataset,
-    ipred = ipred,
-    variables = variables,
-    tolerance = tolerance,
-    dest = dest,
-    seed = seed,
-    settings = settings
+test_that("format_more_info wraps URLs and escapes the rest", {
+  x <- c(
+    "",
+    NA,
+    "https://github.com/Calvagone/campsismod",
+    "https://a.com, https://b.com/x_y",
+    "John_Doe <john@doe.com>"
   )
-
-  # Export to PDF (only when NOCB is true to not duplicate PDF's)
-  # if (nocb) {
-  #   qual %>% write(file=paste0(resultsFolder, "qualification_", modelName, "_", dest, ".pdf"), summary=FALSE, log=FALSE)
-  # }
-
-  return(qual)
-}
-
-get_test_name <- function(name) {
-  return(paste0(name, " (", paste0(TEST_ENGINES, collapse = "/"), ")"))
-}
-
-is_qualification_suite_provided <- function() {
-  option <- get_campsisqual_option()
-  if (is.null(option)) {
-    return(FALSE)
-  } else {
-    path <- option$QUALIFICATION_SUITE
-    return(dir.exists(path))
-  }
-}
-
-get_campsisqual_option <- function() {
-  return(getOption("campsisqual.options"))
-}
-
-activate_suite <- function(enable) {
-  if (enable) {
-    basePath <- "<PATH_TO_SUITE>"
-    qualOptions <- list()
-    qualOptions$QUALIFICATION_SUITE <- file.path(basePath, "qualification_suite")
-    qualOptions$QUALIFICATION_SUITE_N_MODELS <- 97
-    options(campsisqual.options = qualOptions)
-  }
-}
+  expect_equal(
+    format_more_info(x),
+    c(
+      "",
+      "",
+      "\\url{https://github.com/Calvagone/campsismod}",
+      "\\url{https://a.com}, \\url{https://b.com/x_y}",
+      "John\\_Doe <john@doe.com>"
+    )
+  )
+})

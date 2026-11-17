@@ -12,7 +12,7 @@ qualify(
   tolerance = 0.01,
   dest = "rxode2",
   seed = 1,
-  settings = Settings(NOCB(TRUE)),
+  settings = campsis::Settings(campsis::NOCB(TRUE)),
   idref = "ipred",
   ipred_source = "NONMEM"
 )

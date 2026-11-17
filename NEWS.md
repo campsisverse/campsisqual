@@ -1,3 +1,7 @@
+# campsisqual 1.6.0
+
+* Remove proprietary qualification suite and issue public IQ/OQ report #28
+
 # campsisqual 1.5.0
 
 * Migrate campsisqual to snake_case #20

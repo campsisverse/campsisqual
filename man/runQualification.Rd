@@ -2,14 +2,13 @@
 % Please edit documentation in R/deprecated_methods.R
 \name{runQualification}
 \alias{runQualification}
-\title{Get OS name.}
+\title{Run qualification.}
 \usage{
 runQualification(
   packages,
   fullname,
   initials = NULL,
   output_dir = getwd(),
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -22,9 +21,7 @@ runQualification(
 
 \item{initials}{username initials to be used in the filename. If not provided, initials are deduced from the fullname.}
 
-\item{output_dir}{output directory}
-
-\item{qualification_suite}{qualification suite object, type ?QualificationSuite for more information}
+\item{output_dir}{output directory where the qualification report is written}
 
 \item{cpu}{number of workers to be used, default is 6 workers}
 
@@ -33,7 +30,7 @@ runQualification(
 \item{skip_python}{skip Python tests (e.g. Pharmpy in campsistrans), default is TRUE}
 }
 \value{
-the OS name
+TRUE if the qualification passes, FALSE otherwise
 }
 \description{
 `r lifecycle::badge("deprecated")`

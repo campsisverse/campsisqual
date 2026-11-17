@@ -12,21 +12,15 @@ S3method(summarise_riskmetric,pkg_metric_news_current)
 S3method(summarise_riskmetric,pkg_metric_online_code_coverage)
 S3method(summarise_riskmetric,pkg_metric_successful_tests)
 export("%>%")
-export(Credentials)
-export(QualificationSuite)
 export(areEqual)
 export(are_equal)
 export(assess_package)
 export(checkTinyTEXInstallation)
 export(check_tinytex_installation)
 export(compare)
-export(getCACertificate)
-export(getCertificateInformation)
 export(getOSName)
 export(getPlot)
 export(getTable)
-export(get_ca_certificate)
-export(get_certificate_information)
 export(get_os_name)
 export(get_plot)
 export(get_table)
@@ -38,14 +32,7 @@ export(run_qualification)
 export(run_qualification_core)
 export(set_default_obs_cmt)
 export(with_dir)
-exportClasses(qualification_suite)
-exportClasses(qualification_suite_credentials)
 exportClasses(qualification_summary)
-importFrom(PKI,
-  PKI.get.cert.info,
-  PKI.load.cert,
-  PKI.verifyCA
-)
 importFrom(assertthat,assert_that)
 importFrom(campsis,
   get_times,
@@ -54,6 +41,7 @@ importFrom(campsis,
 importFrom(campsismod,export)
 importFrom(doSNOW,registerDoSNOW)
 importFrom(dplyr,
+  across,
   arrange,
   as_tibble,
   distinct,
@@ -62,7 +50,6 @@ importFrom(dplyr,
   group_indices,
   left_join,
   mutate,
-  nest_by,
   pull,
   relocate,
   rename,
@@ -81,17 +68,12 @@ importFrom(ggplot2,
   scale_colour_discrete,
   ylab
 )
-importFrom(jsonlite,
-  read_json,
-  write_json
-)
 importFrom(kableExtra,
   column_spec,
   kable_styling,
   kbl
 )
-importFrom(magrittr,`%>%`)
-importFrom(openssl,decrypt_envelope)
+importFrom(magrittr,"%>%")
 importFrom(parallel,
   makeCluster,
   stopCluster
@@ -99,11 +81,11 @@ importFrom(parallel,
 importFrom(pbmcapply,progressBar)
 importFrom(purrr,
   discard,
+  keep,
   list_rbind,
   map,
   map_chr,
-  map_df,
-  pwalk
+  map_df
 )
 importFrom(riskmetric,
   assess_has_bug_reports_url,
@@ -117,11 +99,7 @@ importFrom(riskmetric,
   pkg_assess,
   pkg_ref
 )
-importFrom(rlang,raw_deparse_str)
-importFrom(rmarkdown,
-  find_pandoc,
-  render
-)
+importFrom(rmarkdown,render)
 importFrom(testthat,test_package)
 importFrom(tibble,
   add_column,
@@ -133,4 +111,3 @@ importFrom(tictoc,
   toc
 )
 importFrom(tinytex,pdflatex)
-importFrom(zip,unzip)

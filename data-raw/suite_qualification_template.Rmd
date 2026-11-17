@@ -1,0 +1,172 @@
+---
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+params:
+  set_title: 'Campsis suite qualification report'
+  results: ''
+  packages: ''
+  fullname: ''
+title: '`r params$set_title`'
+subtitle: 'Installation and operational qualification (IQ/OQ)'
+author: '`r params$fullname`'
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
+  - \usepackage{hyperref}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, results = "asis")
+results <- params$results
+packages <- params$packages
+fullname <- params$fullname
+
+get_version <- function(package) {
+  tryCatch(as.character(utils::packageVersion(package)), error = function(e) "Not installed")
+}
+```
+
+\newpage
+
+# Computer information
+
+```{r}
+computerInfo <- tibble::tibble(
+  Item = c(
+    "Full name:",
+    "User name:",
+    "Computer name:",
+    "Operating system:",
+    "R version:",
+    "rxode2 version:",
+    "mrgsolve version:",
+    "testthat version:",
+    "riskmetric version:",
+    "campsisqual version:"
+  ),
+  Value = c(
+    fullname,
+    Sys.info()[["user"]],
+    Sys.info()[["nodename"]],
+    get_os_name(),
+    paste(R.version$major, R.version$minor, sep = "."),
+    get_version("rxode2"),
+    get_version("mrgsolve"),
+    get_version("testthat"),
+    get_version("riskmetric"),
+    get_version("campsisqual")
+  )
+)
+kableExtra::kbl(computerInfo, format = "latex", col.names = NULL, booktabs = TRUE, linesep = "") |>
+  kableExtra::kable_styling(latex_options = "hold_position", position = "left") |>
+  print()
+```
+
+# Campsis suite qualification summary
+
+The table below summarises the number of expectations that passed, failed, raised a warning,
+raised an error or were skipped, for each tested package of the Campsis suite.
+
+```{r}
+print_summary_kable(results$summarised)
+```
+
+```{r}
+qualOK <- qualification_passed(results$summarised)
+status <- ifelse(
+  qualOK,
+  "\\textcolor{teal}{\\textbf{SUCCESSFUL}}",
+  "\\textcolor{red}{\\textbf{FAILED}}"
+)
+cat(sprintf("\n\n\\textbf{Status:} %s on %s\n\n", status, format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+cat("The qualification is successful when no test failed and no error occurred.",
+    "Warnings and skipped tests are reported for information only.\n\n")
+```
+
+```{r}
+for (package in packages) {
+  pkgResults <- results$all[[package]]
+
+  cat("\\newpage\n\n")
+  cat(sprintf("# Package %s (version %s)\n\n", package, as.character(getNamespaceVersion(package))))
+
+  # Package overview (risk metrics)
+  cat("## Package overview\n\n")
+  assessment <- assess_package(package, successful_tests = qualification_passed(pkgResults))
+  categories <- table(factor(assessment$Category, levels = unique(assessment$Category)))
+  assessment |>
+    dplyr::mutate(Criteria = escape_latex(Criteria), `More info` = format_more_info(`More info`)) |>
+    dplyr::select(dplyr::all_of(c("Criteria", "Result", "More info"))) |>
+    kableExtra::kbl(format = "latex", booktabs = TRUE, escape = FALSE) |>
+    kableExtra::kable_styling(latex_options = "hold_position", full_width = FALSE) |>
+    kableExtra::column_spec(1, width = "5.2cm") |>
+    kableExtra::column_spec(2, width = "1.2cm") |>
+    kableExtra::column_spec(3, width = "8.5cm") |>
+    kableExtra::pack_rows(index = categories) |>
+    print()
+  cat("\n\n")
+
+  # Test results by script
+  cat("## Test results by script\n\n")
+  summarise_results_by_script(pkgResults) |>
+    kableExtra::kbl(format = "latex", booktabs = TRUE, longtable = TRUE, linesep = "") |>
+    kableExtra::kable_styling(latex_options = c("striped", "repeat_header"), full_width = FALSE) |>
+    kableExtra::column_spec(1, width = "6.5cm") |>
+    print()
+  cat("\n\n")
+
+  # Failed tests and warnings
+  cat("## Failed tests and warnings\n\n")
+  cat("### Failed tests\n\n")
+  failures <- results$failures[[package]]
+  if (is.null(failures) || nrow(failures) == 0) {
+    cat("No test failed and no error occurred.\n\n")
+  } else {
+    failures |>
+      dplyr::transmute(
+        `Test script` = escape_latex(file),
+        Test = escape_latex(test),
+        Type = type,
+        Message = format_message(message)
+      ) |>
+      kableExtra::kbl(format = "latex", booktabs = TRUE, longtable = TRUE, escape = FALSE, linesep = "\\addlinespace") |>
+      kableExtra::kable_styling(latex_options = "repeat_header", full_width = FALSE) |>
+      kableExtra::column_spec(1, width = "3cm") |>
+      kableExtra::column_spec(2, width = "4cm") |>
+      kableExtra::column_spec(3, width = "1.2cm") |>
+      kableExtra::column_spec(4, width = "6.5cm") |>
+      print()
+    cat("\n\n")
+  }
+
+  cat("### Warnings\n\n")
+  warnings <- results$warnings[[package]]
+  if (is.null(warnings) || nrow(warnings) == 0) {
+    cat("No warning was raised.\n\n")
+  } else {
+    warnings |>
+      dplyr::transmute(Warning = format_message(warning), Occurrences = occurrences) |>
+      kableExtra::kbl(format = "latex", booktabs = TRUE, longtable = TRUE, escape = FALSE, linesep = "\\addlinespace") |>
+      kableExtra::kable_styling(latex_options = "repeat_header", full_width = FALSE) |>
+      kableExtra::column_spec(1, width = "12.5cm") |>
+      print()
+    cat("\n\n")
+  }
+}
+```

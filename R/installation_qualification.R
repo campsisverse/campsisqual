@@ -10,7 +10,6 @@ clean_package_results <- function(raw) {
     dplyr::rename(Test = test) %>%
     dplyr::group_by(file, context, Test) %>%
     dplyr::summarise(
-      #NumTests = first(nb),
       Passed = sum(passed),
       Failed = sum(failed),
       Warnings = sum(warning),
@@ -32,7 +31,26 @@ summarise_results <- function(results) {
 }
 
 #'
-#' Print summary kable.
+#' Summarise results by test script.
+#'
+#' @param results cleaned package results, see `clean_package_results()`
+#' @return a tibble with one row per test script and the following columns:
+#'  'Test script', 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped'
+#' @importFrom dplyr across group_by rename summarise
+summarise_results_by_script <- function(results) {
+  return(
+    results %>%
+      dplyr::group_by(file) %>%
+      dplyr::summarise(
+        dplyr::across(dplyr::all_of(c("Passed", "Failed", "Warnings", "Errors", "Skipped")), sum),
+        .groups = "drop"
+      ) %>%
+      dplyr::rename(`Test script` = file)
+  )
+}
+
+#'
+#' Print summary kable (LaTeX).
 #'
 #' @param x data frame
 #' @return printed kable
@@ -40,26 +58,10 @@ summarise_results <- function(results) {
 print_summary_kable <- function(x) {
   return(
     x %>%
-      kableExtra::kbl(booktabs = T) %>%
+      kableExtra::kbl(format = "latex", booktabs = T, linesep = "") %>%
       kableExtra::kable_styling(full_width = T, latex_options = c("striped", "hold_position")) %>%
       kableExtra::column_spec(1, width = "2.6cm") %>%
       kableExtra::column_spec(2, width = "1.5cm") %>%
-      print()
-  )
-}
-
-#'
-#' Print kable.
-#'
-#' @param x data frame
-#' @return printed kable
-#' @importFrom kableExtra kbl kable_styling column_spec
-print_kable <- function(x) {
-  return(
-    x %>%
-      kableExtra::kbl(booktabs = T) %>%
-      kableExtra::kable_styling(full_width = T, latex_options = c("striped", "hold_position")) %>%
-      kableExtra::column_spec(1, width = "8cm") %>%
       print()
   )
 }
@@ -84,54 +86,6 @@ qualification_passed <- function(results) {
     retValue <- FALSE
   }
   return(retValue)
-}
-
-#'
-#' Write results.
-#'
-#' @param results results
-#' @return nothing
-#' @importFrom dplyr nest_by
-#' @importFrom purrr pwalk
-write_results <- function(results) {
-  nestedResults <- results %>%
-    dplyr::nest_by(file, context, .key = "Results") %>%
-    dplyr::nest_by(file, .key = "Categories")
-  return(purrr::pwalk(list(nestedResults$file, nestedResults$Categories), write_file_results))
-}
-
-#'
-#' Write file results.
-#'
-#' @param file file
-#' @param categories categories
-#' @param ... extra arguments
-#' @return nothing
-#' @importFrom purrr pwalk
-write_file_results <- function(file, categories, ...) {
-  #cat("###", file, "\n")
-  return(purrr::pwalk(list(categories$context, categories$Results, file), write_category_results))
-}
-
-#'
-#' Write category results.
-#'
-#' @param category category
-#' @param tests tests
-#' @param file file
-#' @param ... extra arguments
-#' @return nothing
-#' @importFrom kableExtra kbl kable_styling column_spec
-write_category_results <- function(category, tests, file, ...) {
-  cat(paste0("**", category, "**\n\n"))
-  cat("*Script: ", file, "*\n")
-  return(
-    tests %>%
-      kableExtra::kbl(booktabs = T, longtable = T) %>%
-      kableExtra::kable_styling(full_width = F, latex_options = c("hold_position", "striped")) %>%
-      kableExtra::column_spec(1, width = "8cm") %>%
-      print()
-  )
 }
 
 bind_package_and_version <- function(x, package) {
@@ -189,8 +143,8 @@ get_os_name <- function(short = FALSE) {
 #' @importFrom purrr map_chr discard
 collect_package_warnings <- function(x) {
   assertthat::assert_that(is(x, "testthat_results"), msg = "x must be of type 'testthat_results'")
-  warningMessages <- NULL
-  for (i in 1:length(x)) {
+  warningMessages <- character(0)
+  for (i in seq_along(x)) {
     testResult <- x[[i]]
     warnings <- testResult$results %>%
       purrr::map_chr(.f = function(y) {
@@ -213,29 +167,52 @@ collect_package_warnings <- function(x) {
 }
 
 #'
+#' Collect package failures (failed expectations and errors).
+#'
+#' @param x package test results
+#' @return a tibble with 4 columns: 'file', 'test', 'type' ('Failure' or 'Error') and 'message'
+#' @importFrom tibble tibble
+#' @importFrom purrr keep list_rbind map map_chr
+collect_package_failures <- function(x) {
+  assertthat::assert_that(is(x, "testthat_results"), msg = "x must be of type 'testthat_results'")
+  empty <- tibble::tibble(file = character(0), test = character(0), type = character(0), message = character(0))
+
+  failures <- x %>%
+    purrr::map(.f = function(testResult) {
+      expectations <- testResult$results %>%
+        purrr::keep(~ is(.x, "expectation_failure") || is(.x, "expectation_error"))
+      return(tibble::tibble(
+        file = rep(testResult$file, length(expectations)),
+        test = rep(testResult$test, length(expectations)),
+        type = expectations %>% purrr::map_chr(~ ifelse(is(.x, "expectation_error"), "Error", "Failure")),
+        message = expectations %>% purrr::map_chr(~ as.character(.x$message))
+      ))
+    })
+
+  return(purrr::list_rbind(c(list(empty), failures)))
+}
+
+#'
 #' Run qualification.
+#'
+#' Run the tests of the given packages from the Campsis suite and produce an
+#' IQ/OQ report in PDF (rendered with LaTeX, see `render_report()`).
 #'
 #' @param packages packages to qualify
 #' @param fullname fullname of the person running the qualification
 #' @param initials username initials to be used in the filename. If not provided, initials are deduced from the fullname.
-#' @param output_dir output directory
-#' @param qualification_suite qualification suite object, type ?QualificationSuite for more information
+#' @param output_dir output directory where the qualification report is written
 #' @param cpu number of workers to be used, default is 6 workers
 #' @param skip_vdiffr skip Vdiffr tests, default is TRUE
 #' @param skip_python skip Python tests (e.g. Pharmpy in campsistrans), default is TRUE
 #' @return TRUE if the qualification passes, FALSE otherwise
-#' @importFrom purrr map_df
-#' @importFrom testthat test_package
-#' @importFrom rmarkdown find_pandoc
 #' @importFrom tictoc tic toc
-#' @importFrom PKI PKI.load.cert PKI.verifyCA
 #' @export
 run_qualification <- function(
   packages,
   fullname,
   initials = NULL,
   output_dir = getwd(),
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -271,22 +248,22 @@ run_qualification <- function(
   tictoc::tic()
   results <- run_qualification_core(
     packages = packages,
-    qualification_suite = qualification_suite,
     cpu = cpu,
     skip_vdiffr = skip_vdiffr,
     skip_python = skip_python
   )
-  if (!is.null(qualification_suite)) {
-    report <- render_report(
-      results = results,
-      packages = packages,
-      fullname = fullname,
-      initials = initials,
-      output_dir = output_dir,
-      qualification_suite = qualification_suite
-    )
-  }
+  report <- render_report(
+    results = results,
+    packages = packages,
+    fullname = fullname,
+    initials = initials,
+    output_dir = output_dir
+  )
   tictoc::toc()
+
+  if (!is.null(report)) {
+    cat(sprintf("Qualification report: %s\n", report))
+  }
 
   # Check if qualification passed
   qualOK <- results$summarised %>% qualification_passed()
@@ -299,22 +276,25 @@ run_qualification <- function(
 #' Run qualification core.
 #'
 #' @param packages packages to qualify
-#' @param qualification_suite qualification suite object
 #' @param cpu number of workers to be used
 #' @param skip_vdiffr skip Vdiffr tests, default is TRUE
 #' @param skip_python skip Python tests (e.g. Pharmpy in campsistrans), default is TRUE
-#' @return summarised results
-#' @importFrom purrr map_df
+#' @return a list with the following items:
+#'  - `summarised`: data frame with one row per package (columns 'Package', 'Version',
+#'  'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
+#'  - `all`: named list (one item per package) with the results of each test
+#'  (columns 'file', 'context', 'Test', 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
+#'  - `warnings`: named list (one item per package) with the collected warnings, see `collect_package_warnings()`
+#'  - `failures`: named list (one item per package) with the failed expectations and errors, see `collect_package_failures()`
+#' @importFrom purrr map map_df
 #' @importFrom testthat test_package
 #' @importFrom foreach foreach
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doSNOW registerDoSNOW
 #' @importFrom pbmcapply progressBar
-#' @importFrom zip unzip
 #' @export
 run_qualification_core <- function(
   packages,
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -322,30 +302,6 @@ run_qualification_core <- function(
   packagesNo <- length(packages)
   if (packagesNo == 0) {
     stop("No packages to qualify")
-  }
-  qualSuite <- NULL
-  if (is.null(qualification_suite)) {
-    cat(
-      "No qualification suite provided. Only the base tests will be performed and no qualification report will be produced.\n"
-    )
-  } else {
-    credentials <- qualification_suite@credentials
-    zipPath <- qualification_suite@path
-    tmpDir <- tempdir()
-    zip::unzip(zipfile = zipPath, exdir = tmpDir)
-    baseDir <- basename(zipPath) |>
-      gsub(pattern = ".zip", replacement = "")
-    suiteDir <- "qualification_suite"
-    qualSuite <- file.path(tmpDir, suiteDir)
-    with_dir(
-      tmpDir,
-      decrypt_folder(
-        from = baseDir,
-        to = suiteDir,
-        private_key = credentials@private_key_path,
-        passphrase = credentials@passphrase
-      )
-    )
   }
 
   # Check package existence and check that it was installed with tests
@@ -368,29 +324,37 @@ run_qualification_core <- function(
   # Start cluster configuration
   if (cpu > 1) {
     cl <- parallel::makeCluster(cpu)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
     doSNOW::registerDoSNOW(cl)
+    `%op%` <- foreach::`%dopar%`
+  } else {
+    `%op%` <- foreach::`%do%`
   }
-  `%dopar%` <- foreach::`%dopar%`
+
+  # Options and environment variables are set within the loop. When tests run
+  # sequentially (current session), they must be restored afterwards.
+  optionNames <- c("campsisqual.options", "campsistrans.options", "campsis.options", "ecampsis.options")
+  oldOptions <- lapply(stats::setNames(nm = optionNames), getOption)
+  oldNotCran <- Sys.getenv("NOT_CRAN", unset = NA)
+  on.exit(
+    {
+      options(oldOptions)
+      if (is.na(oldNotCran)) Sys.unsetenv("NOT_CRAN") else Sys.setenv("NOT_CRAN" = oldNotCran)
+    },
+    add = TRUE
+  )
 
   # Progress bar
   pb <- pbmcapply::progressBar(max = packagesNo, style = "ETA")
   progress <- function(n) utils::setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
 
-  # Preparing options
-  qualOptions <- list()
-  if (is.null(qualification_suite)) {
-    qualOptions$QUALIFICATION_SUITE <- ""
-  } else {
-    qualOptions$QUALIFICATION_SUITE <- qualSuite
-    qualOptions$QUALIFICATION_SUITE_N_MODELS <- qualification_suite@nmodels
-  }
-
-  testResults <- foreach::foreach(i = seq_along(packages), .combine = append, .options.snow = opts) %dopar%
+  testResults <- foreach::foreach(i = seq_along(packages), .combine = append, .options.snow = opts) %op%
     {
       package <- packages[i]
       Sys.setenv("NOT_CRAN" = TRUE)
-      options(campsisqual.options = qualOptions)
+      # Tells campsisqual tests that a qualification is running (avoids recursive qualification)
+      options(campsisqual.options = list(RUNNING_QUALIFICATION = TRUE))
       options(campsistrans.options = list(SKIP_PHARMPY_TESTS = skip_python))
       options(campsis.options = list(SKIP_LONG_TESTS = FALSE, SKIP_VDIFFR_TESTS = skip_vdiffr))
       options(
@@ -405,11 +369,7 @@ run_qualification_core <- function(
       )
       return(retValue)
     }
-
-  # Stop cluster
-  if (cpu > 1) {
-    parallel::stopCluster(cl)
-  }
+  close(pb)
 
   # Clean test results
   testResultsCleaned <- testResults %>%
@@ -419,70 +379,98 @@ run_qualification_core <- function(
   warnings <- testResults %>%
     purrr::map(~ collect_package_warnings(.x))
 
+  # Collect failures and errors
+  failures <- testResults %>%
+    purrr::map(~ collect_package_failures(.x))
+
   summarisedResults <- packages %>%
     purrr::map_df(.f = function(package) {
       return(testResultsCleaned[[package]] %>% bind_package_and_version(package))
     })
 
-  return(list(summarised = summarisedResults, all = testResultsCleaned, warnings = warnings, qualSuite = qualSuite))
+  return(list(summarised = summarisedResults, all = testResultsCleaned, warnings = warnings, failures = failures))
 }
 
 #'
-#' Render report with rmarkdown.
+#' Get initials from full name.
 #'
-#' @param results results
-#' @param packages packages
-#' @param fullname fullname
+#' @param fullname full name, e.g. 'John Doe'
+#' @return initials, e.g. 'JD'
+get_initials <- function(fullname) {
+  parts <- strsplit(trimws(fullname), "\\s+")[[1]]
+  return(paste0(substring(parts, 1, 1), collapse = ""))
+}
+
+#'
+#' Get the report filename (without extension).
+#'
+#' @param packages packages that were qualified
+#' @param initials initials of the person running the qualification
+#' @param date date of the qualification
+#' @return report filename, character
+get_report_filename <- function(packages, initials, date = Sys.Date()) {
+  eCampsisQual <- "ecampsis" %in% packages
+  return(sprintf(
+    "IQ_OQ_%s-%s_%s_%s_%s",
+    ifelse(eCampsisQual, "e-Campsis", "Campsis_Suite"),
+    as.character(getNamespaceVersion(ifelse(eCampsisQual, "ecampsis", "campsis"))),
+    get_os_name(short = TRUE),
+    initials,
+    format(date, "%Y%m%d")
+  ))
+}
+
+#'
+#' Render the IQ/OQ qualification report with rmarkdown (PDF via LaTeX).
+#'
+#' @param results results, as returned by `run_qualification_core()`
+#' @param packages packages that were qualified
+#' @param fullname fullname of the person running the qualification
 #' @param initials username initials to be used in the filename. If not provided, initials are deduced from the fullname.
 #' @param output_dir output directory
-#' @param qualification_suite qualification suite object
-#' @return nothing
+#' @return the path to the PDF report, or NULL if the report could not be rendered
 #' @importFrom rmarkdown render
-render_report <- function(results, packages, fullname, initials = NULL, output_dir, qualification_suite) {
-  credentials <- qualification_suite@credentials
-  eCampsisQual <- "ecampsis" %in% packages
-
-  # Report filename
-  reportFilename <- paste0(
-    sprintf("IQ_OQ_%s-", ifelse(eCampsisQual, "e-Campsis", "Campsis_Suite")),
-    ifelse(eCampsisQual, getNamespaceVersion("ecampsis"), getNamespaceVersion("campsis")),
-    "_",
-    get_os_name(short = TRUE),
-    "_",
-    initials,
-    "_",
-    gsub("-", "", x = Sys.Date() %>% as.character())
+render_report <- function(results, packages, fullname, initials = NULL, output_dir = getwd()) {
+  if (is.null(initials)) {
+    initials <- get_initials(fullname)
+  }
+  reportFilename <- get_report_filename(packages = packages, initials = initials)
+  title <- ifelse(
+    "ecampsis" %in% packages,
+    "e-Campsis qualification report",
+    "Campsis suite qualification report"
   )
 
-  # Initials deduced from fullname (if not provided)
-  parts <- strsplit(fullname, " ")[[1]]
-  if (is.null(initials)) {
-    initials <- substring(parts, 0, 1) |>
-      paste0(collapse = "")
+  # Export Rmd template to a temporary working directory
+  workDir <- tempfile(pattern = "campsisqual_report_")
+  dir.create(workDir)
+  on.exit(unlink(workDir, recursive = TRUE), add = TRUE)
+  rmdFile <- file.path(workDir, "qualification_report.Rmd")
+  writeLines(text = campsisqual::suite_qualification_template, con = rmdFile)
+
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
   }
 
-  rmdFilename <- ifelse(eCampsisQual, "qualification_ecampsis_template.Rmd", "qualification_campsis_template.Rmd")
-
-  # Rendering report
   report <- tryCatch(
     rmarkdown::render(
-      input = file.path(results$qualSuite, "reporting", rmdFilename),
+      input = rmdFile,
       params = list(
-        results = results$all,
-        summarised_results = results$summarised,
-        warnings = results$warnings,
+        set_title = title,
+        results = results,
         packages = packages,
-        fullname = fullname,
-        credentials = credentials
+        fullname = fullname
       ),
       output_file = reportFilename,
-      output_dir = output_dir
+      output_dir = output_dir,
+      intermediates_dir = workDir,
+      # Template can use the internal functions of campsisqual
+      envir = new.env(parent = asNamespace("campsisqual")),
+      quiet = TRUE
     ),
     error = function(cond) {
-      print(cond)
-    },
-    finally = {
-      unlink(results$qualSuite, recursive = TRUE)
+      warning(sprintf("Qualification report could not be rendered: %s", conditionMessage(cond)), call. = FALSE)
+      return(NULL)
     }
   )
 

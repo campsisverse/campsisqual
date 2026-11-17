@@ -2,33 +2,30 @@
 % Please edit documentation in R/installation_qualification.R
 \name{render_report}
 \alias{render_report}
-\title{Render report with rmarkdown.}
+\title{Render the IQ/OQ qualification report with rmarkdown (PDF via LaTeX).}
 \usage{
 render_report(
   results,
   packages,
   fullname,
   initials = NULL,
-  output_dir,
-  qualification_suite
+  output_dir = getwd()
 )
 }
 \arguments{
-\item{results}{results}
+\item{results}{results, as returned by `run_qualification_core()`}
 
-\item{packages}{packages}
+\item{packages}{packages that were qualified}
 
-\item{fullname}{fullname}
+\item{fullname}{fullname of the person running the qualification}
 
 \item{initials}{username initials to be used in the filename. If not provided, initials are deduced from the fullname.}
 
 \item{output_dir}{output directory}
-
-\item{qualification_suite}{qualification suite object}
 }
 \value{
-nothing
+the path to the PDF report, or NULL if the report could not be rendered
 }
 \description{
-Render report with rmarkdown.
+Render the IQ/OQ qualification report with rmarkdown (PDF via LaTeX).
 }

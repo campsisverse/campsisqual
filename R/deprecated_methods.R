@@ -14,7 +14,7 @@ getOSName <- function(short = FALSE) {
   get_os_name(short = short)
 }
 
-#' Get OS name.
+#' Run qualification.
 #'
 #' `runQualification()` is deprecated in favor of `run_qualification()`.
 #'
@@ -22,7 +22,7 @@ getOSName <- function(short = FALSE) {
 #' `r lifecycle::badge("deprecated")`
 #'
 #' @inheritParams run_qualification
-#' @return the OS name
+#' @return TRUE if the qualification passes, FALSE otherwise
 #' @export
 #' @rdname runQualification
 runQualification <- function(
@@ -30,7 +30,6 @@ runQualification <- function(
   fullname,
   initials = NULL,
   output_dir = getwd(),
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -41,42 +40,10 @@ runQualification <- function(
     fullname = fullname,
     initials = initials,
     output_dir = output_dir,
-    qualification_suite = qualification_suite,
     cpu = cpu,
     skip_vdiffr = skip_vdiffr,
     skip_python = skip_python
   )
-}
-
-#' Get more information on the given certificate.
-#'
-#' `getCertificateInformation()` is deprecated in favor of `get_certificate_information()`.
-#'
-#' @description
-#' `r lifecycle::badge("deprecated")`
-#'
-#' @inheritParams get_certificate_information
-#' @return certificate information
-#' @export
-#' @rdname getCertificateInformation
-getCertificateInformation <- function(cert) {
-  lifecycle::deprecate_warn("1.5.0", "getCertificateInformation()", "get_certificate_information()")
-  get_certificate_information(cert = cert)
-}
-
-#' Get the CA certificate.
-#'
-#' `getCACertificate()` is deprecated in favor of `get_ca_certificate()`.
-#'
-#' @description
-#' `r lifecycle::badge("deprecated")`
-#'
-#' @return CA certificate, character vector
-#' @export
-#' @rdname getCACertificate
-getCACertificate <- function() {
-  lifecycle::deprecate_warn("1.5.0", "getCACertificate()", "get_ca_certificate()")
-  get_ca_certificate()
 }
 
 #' Are vectors equal given the tolerance.

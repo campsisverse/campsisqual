@@ -2,7 +2,7 @@
 % Please edit documentation in R/installation_qualification.R
 \name{print_summary_kable}
 \alias{print_summary_kable}
-\title{Print summary kable.}
+\title{Print summary kable (LaTeX).}
 \usage{
 print_summary_kable(x)
 }
@@ -13,5 +13,5 @@ print_summary_kable(x)
 printed kable
 }
 \description{
-Print summary kable.
+Print summary kable (LaTeX).
 }

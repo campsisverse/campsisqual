@@ -6,7 +6,6 @@
 \usage{
 run_qualification_core(
   packages,
-  qualification_suite = NULL,
   cpu = 6L,
   skip_vdiffr = TRUE,
   skip_python = TRUE
@@ -15,8 +14,6 @@ run_qualification_core(
 \arguments{
 \item{packages}{packages to qualify}
 
-\item{qualification_suite}{qualification suite object}
-
 \item{cpu}{number of workers to be used}
 
 \item{skip_vdiffr}{skip Vdiffr tests, default is TRUE}
@@ -24,7 +21,13 @@ run_qualification_core(
 \item{skip_python}{skip Python tests (e.g. Pharmpy in campsistrans), default is TRUE}
 }
 \value{
-summarised results
+a list with the following items:
+ - `summarised`: data frame with one row per package (columns 'Package', 'Version',
+ 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
+ - `all`: named list (one item per package) with the results of each test
+ (columns 'file', 'context', 'Test', 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
+ - `warnings`: named list (one item per package) with the collected warnings, see `collect_package_warnings()`
+ - `failures`: named list (one item per package) with the failed expectations and errors, see `collect_package_failures()`
 }
 \description{
 Run qualification core.
