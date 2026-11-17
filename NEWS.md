@@ -1,6 +1,8 @@
 # campsisqual 1.6.0
 
 * Remove proprietary qualification suite and issue public IQ/OQ report #28
+* Add codecov badge to README #29
+* Migrate package to campsisverse organisation #30
 
 # campsisqual 1.5.0
 

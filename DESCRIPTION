@@ -2,12 +2,14 @@ Type: Package
 Package: campsisqual
 Title: Campsis Qualification Package
 Version: 1.6.0
-Authors@R:
-    person("Nicolas", "Luyckx", , "nicolas.luyckx@calvagone.com", role = c("aut", "cre"))
+Authors@R: c(
+    person("Nicolas", "Luyckx", email = "nicolas.luyckx@lynxsoft.be", role = c("aut", "cre")),
+    person("Calvagone", role = "cph")
+  )
 Description: Run the qualification of the Campsis suite and issue an IQ/OQ report in PDF (rendered with LaTeX). In addition, qualify the implementation of a Campsis model against the predictions of the original modelling tool (e.g. NONMEM).
 License: GPL (>= 3)
-URL: https://github.com/Calvagone/campsisqual
-BugReports: https://github.com/Calvagone/campsisqual/issues
+URL: https://github.com/campsisverse/campsisqual
+BugReports: https://github.com/campsisverse/campsisqual/issues
 Depends:
     campsismod,
     R (>= 4.1.0)
@@ -43,8 +45,6 @@ Suggests:
     withr
 VignetteBuilder: 
     knitr
-Remotes:
-    Calvagone/campsisnca@main
 Config/roxygen2/version: 8.1.1
 Encoding: UTF-8
 Language: en-US

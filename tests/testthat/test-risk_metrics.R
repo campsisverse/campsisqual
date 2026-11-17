@@ -35,7 +35,7 @@ test_that("summarise_riskmetric overrides some metrics for Campsis packages", {
   metric <- structure(TRUE, class = c("logical", "pkg_metric_has_news"))
   expect_equal(
     summarise_riskmetric(metric, "campsisqual")$`More info`,
-    "https://github.com/Calvagone/campsisqual/blob/master/NEWS.md"
+    "https://github.com/campsisverse/campsisqual/blob/master/NEWS.md"
   )
 })
 

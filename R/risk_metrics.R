@@ -72,7 +72,7 @@ summarise_riskmetric.pkg_metric_has_news <- function(x, package) {
   # Add a link to the online file
   result <- risk_metric_result(x)
   if (result == "Yes") {
-    info <- sprintf("https://github.com/Calvagone/%s/blob/%s/NEWS.md", package, get_package_branch(package))
+    info <- sprintf("https://github.com/campsisverse/%s/blob/%s/NEWS.md", package, get_package_branch(package))
   } else {
     info <- ""
   }

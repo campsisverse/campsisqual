@@ -3,7 +3,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/Calvagone/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/Calvagone/campsisqual/actions)
+[![R-CMD-check](https://github.com/campsisverse/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/campsisverse/campsisqual/actions)
 <!-- badges: end -->
 
 A library dedicated to:

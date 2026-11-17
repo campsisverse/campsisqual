@@ -8,7 +8,7 @@ output: github_document
 # campsisqual <img src='man/figures/logo.png' align="right" alt="" width="120" />
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Calvagone/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/Calvagone/campsisqual/actions)
+[![R-CMD-check](https://github.com/campsisverse/campsisqual/workflows/R-CMD-check/badge.svg)](https://github.com/campsisverse/campsisqual/actions)
 <!-- badges: end -->
 
 

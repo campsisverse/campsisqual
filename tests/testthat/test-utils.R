@@ -40,7 +40,7 @@ test_that("format_more_info wraps URLs and escapes the rest", {
   x <- c(
     "",
     NA,
-    "https://github.com/Calvagone/campsismod",
+    "https://github.com/campsisverse/campsismod",
     "https://a.com, https://b.com/x_y",
     "John_Doe <john@doe.com>"
   )
@@ -49,7 +49,7 @@ test_that("format_more_info wraps URLs and escapes the rest", {
     c(
       "",
       "",
-      "\\url{https://github.com/Calvagone/campsismod}",
+      "\\url{https://github.com/campsisverse/campsismod}",
       "\\url{https://a.com}, \\url{https://b.com/x_y}",
       "John\\_Doe <john@doe.com>"
     )
