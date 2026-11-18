@@ -66,6 +66,17 @@ test_that("collect_package_failures lists the failed expectations and errors", {
   expect_error(collect_package_failures(list()), "x must be of type 'testthat_results'")
 })
 
+test_that("collect_package_skipped lists the skipped tests and their reason", {
+  skipped <- collect_package_skipped(generate_test_results())
+  expect_equal(skipped, tibble::tibble(file = "test-a.R", test = "skip", reason = "skipped"))
+
+  empty <- collect_package_skipped(structure(list(), class = "testthat_results"))
+  expect_equal(nrow(empty), 0)
+  expect_equal(colnames(empty), c("file", "test", "reason"))
+
+  expect_error(collect_package_skipped(list()), "x must be of type 'testthat_results'")
+})
+
 test_that("bind_package_and_version adds the package name and version", {
   results <- clean_package_results(generate_test_results())
   summarised <- bind_package_and_version(results, "campsismod")
@@ -118,6 +129,7 @@ test_that("render_report produces the IQ/OQ report", {
   # Results without failures and warnings (e.g. produced by an older version of campsisqual)
   results$failures <- NULL
   results$warnings <- NULL
+  results$skipped <- NULL
   unlink(report)
   report <- render_report(results, packages = "campsismod", fullname = "John Doe", output_dir = output_dir)
   expect_true(file.exists(report))

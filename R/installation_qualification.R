@@ -193,6 +193,31 @@ collect_package_failures <- function(x) {
 }
 
 #'
+#' Collect skipped tests.
+#'
+#' @param x package test results
+#' @return a tibble with 3 columns: 'file', 'test' and 'reason'
+#' @importFrom tibble tibble
+#' @importFrom purrr keep list_rbind map map_chr
+collect_package_skipped <- function(x) {
+  assertthat::assert_that(is(x, "testthat_results"), msg = "x must be of type 'testthat_results'")
+  empty <- tibble::tibble(file = character(0), test = character(0), reason = character(0))
+
+  skipped <- x %>%
+    purrr::map(.f = function(testResult) {
+      expectations <- testResult$results %>%
+        purrr::keep(~ is(.x, "expectation_skip"))
+      return(tibble::tibble(
+        file = rep(testResult$file, length(expectations)),
+        test = rep(testResult$test, length(expectations)),
+        reason = expectations %>% purrr::map_chr(~ sub("^Reason: ", "", as.character(.x$message)))
+      ))
+    })
+
+  return(purrr::list_rbind(c(list(empty), skipped)))
+}
+
+#'
 #' Run qualification.
 #'
 #' Run the tests of the given packages from the Campsis suite and produce an
@@ -286,6 +311,7 @@ run_qualification <- function(
 #'  (columns 'file', 'context', 'Test', 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
 #'  - `warnings`: named list (one item per package) with the collected warnings, see `collect_package_warnings()`
 #'  - `failures`: named list (one item per package) with the failed expectations and errors, see `collect_package_failures()`
+#'  - `skipped`: named list (one item per package) with the skipped tests, see `collect_package_skipped()`
 #' @importFrom purrr map map_df
 #' @importFrom testthat test_package
 #' @importFrom foreach foreach
@@ -383,12 +409,16 @@ run_qualification_core <- function(
   failures <- test_results %>%
     purrr::map(~ collect_package_failures(.x))
 
+  # Collect skipped tests
+  skipped <- test_results %>%
+    purrr::map(~ collect_package_skipped(.x))
+
   summarisedResults <- packages %>%
     purrr::map_df(.f = function(package) {
       return(test_results_cleaned[[package]] %>% bind_package_and_version(package))
     })
 
-  return(list(summarised = summarisedResults, all = test_results_cleaned, warnings = warnings, failures = failures))
+  return(list(summarised = summarisedResults, all = test_results_cleaned, warnings = warnings, failures = failures, skipped = skipped))
 }
 
 #'

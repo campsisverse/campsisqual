@@ -28,6 +28,7 @@ a list with the following items:
  (columns 'file', 'context', 'Test', 'Passed', 'Failed', 'Warnings', 'Errors' and 'Skipped')
  - `warnings`: named list (one item per package) with the collected warnings, see `collect_package_warnings()`
  - `failures`: named list (one item per package) with the failed expectations and errors, see `collect_package_failures()`
+ - `skipped`: named list (one item per package) with the skipped tests, see `collect_package_skipped()`
 }
 \description{
 Run qualification core.

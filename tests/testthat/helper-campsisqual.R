@@ -53,6 +53,7 @@ generate_qualification_results <- function(package = "campsismod") {
     summarised = bind_package_and_version(cleaned, package),
     all = stats::setNames(list(cleaned), package),
     warnings = stats::setNames(list(collect_package_warnings(raw)), package),
-    failures = stats::setNames(list(collect_package_failures(raw)), package)
+    failures = stats::setNames(list(collect_package_failures(raw)), package),
+    skipped = stats::setNames(list(collect_package_skipped(raw)), package)
   ))
 }
