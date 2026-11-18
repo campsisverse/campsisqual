@@ -51,6 +51,18 @@ jobs:
 
           needs: check
 
+      # Binary installs drop tests/; run_qualification() needs campsismod's tests/testthat
+      - name: Reinstall campsismod with its tests
+        run: |
+          install.packages(
+            "campsismod",
+            type = "source",
+            dependencies = FALSE,
+            INSTALL_opts = "--install-tests"
+          )
+          stopifnot(dir.exists(file.path(find.package("campsismod"), "tests", "testthat")))
+        shell: Rscript {0}
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true

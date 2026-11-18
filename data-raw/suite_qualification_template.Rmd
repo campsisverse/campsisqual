@@ -78,7 +78,7 @@ kableExtra::kbl(computer_info, format = "latex", col.names = NULL, booktabs = TR
   print()
 ```
 
-# Campsis suite qualification summary
+# Qualification overview
 
 The table below summarises the number of expectations that passed, failed, raised a warning,
 raised an error or were skipped, for each tested package of the Campsis suite.
