@@ -35,14 +35,12 @@ export(write)
 exportClasses(qualification_summary)
 importFrom(assertthat,assert_that)
 importFrom(campsis,
-  get_times,
-  obs_only
+  NOCB,
+  Settings,
+  obs_only,
+  simulate
 )
-importFrom(campsismod,
-  LagTime,
-  export,
-  find
-)
+importFrom(campsismod,export)
 importFrom(doSNOW,registerDoSNOW)
 importFrom(dplyr,
   .data,

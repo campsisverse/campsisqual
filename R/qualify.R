@@ -92,9 +92,6 @@ qualify <- function(
   # Append ORIGINAL_ID
   campsis <- append_original_id(campsis, table)
 
-  # Fix rxode2 bug
-  campsis <- fix_rxode_bug(campsis = campsis, model = model, dataset = dataset, dest = dest)
-
   # Compare results
   summary <- compare(
     ipred,
@@ -109,35 +106,6 @@ qualify <- function(
   cat(ifelse(summary %>% passed(), "QUALIFICATION SUCCESSFUL", "QUALIFICATION FAILED"))
 
   return(summary)
-}
-
-#' Fix very annoying bug in current version of RxODE (> v1.1.0) or rxode2 (2.0.7).
-#' Description of the bug:
-#' If the model has a lag time and if the dataset does have an observation at time 0,
-#' RxODE still outputs the time 0.
-#'
-#' @param campsis Campsis output
-#' @param model Campsis model
-#' @param dataset engine table OR Campsis dataset
-#' @param dest destination engine
-#' @return the corrected output if the bug was not present if RxODE
-#' @importFrom dplyr filter
-#' @importFrom campsismod find LagTime
-#' @importFrom campsis get_times
-fix_rxode_bug <- function(campsis, model, dataset, dest) {
-  if (dest %in% c("RxODE", "rxode2")) {
-    if (is(dataset, "dataset")) {
-      times <- dataset %>% campsis::get_times()
-
-      # If LAG is found in model & time 0 does not exists in observations
-      # We remove time 0 from the output
-      properties <- model@compartments@properties
-      if (!is.null(properties %>% campsismod::find(campsismod::LagTime(1))) && !(0 %in% times)) {
-        campsis <- campsis %>% dplyr::filter(.data$TIME != 0)
-      }
-    }
-  }
-  return(campsis)
 }
 
 #' Append original ID to simulation output if it exists in the dataset.
