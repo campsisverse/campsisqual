@@ -22,7 +22,7 @@ A library dedicated to:
 Install the latest release from GitHub:
 
 ``` r
-remotes::install_github("Calvagone/campsisqual")
+remotes::install_github("campsisverse/campsisqual")
 ```
 
 Install TinyTeX (reports are rendered in PDF with LaTeX):
@@ -39,6 +39,7 @@ instance:
 ``` r
 install.packages(
   c("campsismod", "campsis", "campsisnca"),
+  type = "source",
   INSTALL_opts = "--install-tests"
 )
 remotes::install_github("campsisverse/campsismisc", INSTALL_opts = "--install-tests") # Not on CRAN yet
