@@ -56,6 +56,7 @@ jobs:
         run: |
           install.packages(
             "campsismod",
+            repos = "https://cloud.r-project.org",
             type = "source",
             dependencies = FALSE,
             INSTALL_opts = "--install-tests"
