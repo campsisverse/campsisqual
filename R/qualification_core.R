@@ -17,7 +17,7 @@ are_equal <- function(x, xref, tolerance, id, type) {
   return(abs(relative_change) < tolerance | (x == 0 & xref == 0))
 }
 
-#' Compare NONMEM results with CAMPSIS results, according to the given tolerance.
+#' Compare NONMEM results with Campsis results, according to the given tolerance.
 #'
 #' @param ipred individual predictions to be compared with (=reference results)
 #' @param campsis Campsis results, data frame
@@ -88,7 +88,7 @@ compare <- function(ipred, campsis, variables, tolerance, dest = "rxode2", ipred
       dplyr::select(c("ID", "TIME", "Simulation", dplyr::all_of(vars_of_interest)))
 
     if (!all(are_equal(ref_subj$TIME, campsis_subj$TIME, tolerance = tolerance, id = id, type = "TIME"))) {
-      stop(paste0("Times are not identical between NONMEM and CAMPSIS for subject ", id))
+      stop(paste0("Times are not identical between NONMEM and Campsis for subject ", id))
     }
 
     subj <- dplyr::bind_rows(campsis_subj, ref_subj)

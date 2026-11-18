@@ -2,7 +2,7 @@
 % Please edit documentation in R/qualification_core.R
 \name{compare}
 \alias{compare}
-\title{Compare NONMEM results with CAMPSIS results, according to the given tolerance.}
+\title{Compare NONMEM results with Campsis results, according to the given tolerance.}
 \usage{
 compare(
   ipred,
@@ -30,5 +30,5 @@ compare(
 logical vector
 }
 \description{
-Compare NONMEM results with CAMPSIS results, according to the given tolerance.
+Compare NONMEM results with Campsis results, according to the given tolerance.
 }

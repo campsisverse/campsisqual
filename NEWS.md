@@ -16,7 +16,7 @@
 
 # campsisqual 1.4.1
 
-* Update method getOSName #18
+* Update method get_os_name #18
 
 # campsisqual 1.4.0
 
@@ -25,7 +25,7 @@
 
 # campsisqual 1.3.3
 
-* Review method 'setDefaultObsCmt' #12
+* Review method 'set_default_obs_cmt' #12
 
 # campsisqual 1.3.2
 
@@ -51,7 +51,7 @@
 * Get rid of 'campsistrans' dependency
 * Get rid of 'calvamod' dependency
 * Do not show skipped tests in test results
-* Parallelise the testing of packages in runQualificationCore
+* Parallelise the testing of packages in run_qualification_core
 * Campsis suite qualification: make sure package was installed with tests
 * Better deal with the generated warnings during the qualification of the Campsis suite
 * Installation qualification suite for pro users
@@ -82,7 +82,7 @@
 
 # campsisqual 0.8.0
 
-* Include all models from Calvamod in the qualification suite.
+* Include all models from calvamod in the qualification suite.
 
 # campsisqual 0.7.0
 

@@ -1,6 +1,6 @@
 Type: Package
 Package: campsisqual
-Title: Campsis Qualification Package
+Title: Qualification Framework for Campsis
 Version: 1.6.0
 Authors@R: c(
     person("Nicolas", "Luyckx", email = "nicolas.luyckx@lynxsoft.be", role = c("aut", "cre")),
@@ -34,14 +34,11 @@ Imports:
     tidyr,
     tinytex
 Suggests: 
-    bookdown,
     devtools,
     knitr,
     mrgsolve,
-    pkgdown,
     roxygen2,
     rxode2,
-    stringr,
     withr
 Config/roxygen2/version: 8.1.1
 Encoding: UTF-8

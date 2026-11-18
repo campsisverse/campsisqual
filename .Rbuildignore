@@ -10,3 +10,4 @@
 ^air\.toml$
 ^cran-comments\.md$
 ^\.vscode$
+^CRAN-SUBMISSION$
