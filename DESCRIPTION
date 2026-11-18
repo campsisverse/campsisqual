@@ -21,7 +21,6 @@ Imports:
     foreach,
     ggplot2,
     kableExtra,
-    lifecycle,
     magrittr,
     methods,
     parallel,
@@ -59,5 +58,4 @@ Collate:
     'qualification_core.R'
     'qualify.R'
     'risk_metrics.R'
-    'deprecated_methods.R'
 Config/testthat/edition: 3

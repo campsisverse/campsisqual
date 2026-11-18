@@ -5,6 +5,7 @@
 * Migrate package to campsisverse organisation #30
 * Campsismod should be listed under Imports rather than Depends #31
 * Remove all notes from R CMD Check #32
+* Prepare package for CRAN submission #33
 
 # campsisqual 1.5.0
 
