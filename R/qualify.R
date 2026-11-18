@@ -23,6 +23,7 @@ check_dest <- function(dest) {
 #' @return qualification summary
 #' @importFrom dplyr arrange filter
 #' @importFrom campsismod export
+#' @importFrom campsis NOCB Settings simulate
 #' @export
 qualify <- function(
   model,
@@ -40,32 +41,32 @@ qualify <- function(
   check_dest(dest)
 
   # Dataset to table
-  isCampsisDataset <- is(dataset, "dataset")
-  if (isCampsisDataset) {
-    settingsNM <- settings
-    settingsNM@nocb@enable <- TRUE # NOCB always TRUE for NONMEM
+  is_campsis_dataset <- is(dataset, "dataset")
+  if (is_campsis_dataset) {
+    settings_nm <- settings
+    settings_nm@nocb@enable <- TRUE # NOCB always TRUE for NONMEM
     table <- dataset %>%
-      campsismod::export(dest = "mrgsolve", model = model, seed = seed, settings = settingsNM)
+      campsismod::export(dest = "mrgsolve", model = model, seed = seed, settings = settings_nm)
   } else {
     table <- dataset
   }
 
   # Ignore IDs mechanism
-  datasetIds <- table$ID %>% unique()
-  ipredIds <- ipred$ID %>% unique()
+  dataset_ids <- table$ID %>% unique()
+  ipred_ids <- ipred$ID %>% unique()
   if (idref == "dataset") {
-    refIds <- datasetIds
+    ref_ids <- dataset_ids
   } else if (idref == "ipred") {
-    refIds <- ipredIds
+    ref_ids <- ipred_ids
   } else {
     stop("idref must be 'dataset' or 'ipred'")
   }
   table <- table %>%
-    dplyr::filter(.data$ID %in% refIds) %>%
+    dplyr::filter(.data$ID %in% ref_ids) %>%
     dplyr::arrange(.data$ID, .data$TIME) %>%
     add_simulation_id_column()
   ipred <- ipred %>%
-    dplyr::filter(.data$ID %in% refIds) %>%
+    dplyr::filter(.data$ID %in% ref_ids) %>%
     dplyr::arrange(.data$ID, .data$TIME) %>%
     add_simulation_id_column()
 
@@ -77,7 +78,7 @@ qualify <- function(
   # If dataset is a table, we give the table with the ID (from 1 to subjects) and ORIGINAL_ID columns
   campsis <- campsis::simulate(
     model,
-    dataset = if (isCampsisDataset) {
+    dataset = if (is_campsis_dataset) {
       dataset
     } else {
       table
